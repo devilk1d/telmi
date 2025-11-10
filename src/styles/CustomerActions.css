@@ -1,0 +1,124 @@
+.customer-actions {
+  padding: 80px 0;
+  background-color: #f9f9f9;
+}
+
+.customer-actions-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.section-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.section-subtitle {
+  font-size: 1.1rem;
+  color: #666;
+}
+
+.action-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+}
+
+.action-card {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  padding: 30px;
+  text-align: center;
+  transition: transform 0.3s, box-shadow 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.action-icon {
+  font-size: 2.5rem;
+  color: var(--card-color);
+  margin-bottom: 20px;
+}
+
+.action-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.action-description {
+  font-size: 1rem;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.action-text-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.action-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  font-family: 'Courier New', 'Consolas', monospace;
+  letter-spacing: 1px;
+}
+
+.copy-button {
+  background-color: var(--card-color);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 12px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.copy-button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+@media (max-width: 992px) {
+  .action-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 576px) {
+  .section-title {
+    font-size: 2rem;
+  }
+  
+  .action-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+
+

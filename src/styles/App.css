@@ -1,0 +1,33 @@
+.App {
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.home-page {
+  position: relative;
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Section spacing improvements */
+section {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Enhanced focus styles for accessibility */
+*:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+
+
+
+
+

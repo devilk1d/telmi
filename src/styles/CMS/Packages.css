@@ -1,0 +1,163 @@
+.cms-packages {
+  animation: fadeIn 0.3s ease;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.page-header h1 {
+  font-size: 32px;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+}
+
+.page-header p {
+  color: #666;
+  font-size: 16px;
+  margin: 0;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #0066cc, #3385d6);
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+}
+
+.packages-table-container {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table thead {
+  background: #f5f7fa;
+}
+
+.data-table th {
+  padding: 16px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 700;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.data-table td {
+  padding: 16px;
+  border-top: 1px solid #e9ecef;
+  font-size: 14px;
+  color: #1a1a1a;
+}
+
+.data-table tbody tr {
+  transition: all 0.3s;
+}
+
+.data-table tbody tr:hover {
+  background: #f5f7fa;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.aktif {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.nonaktif {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-edit,
+.btn-delete,
+.btn-view {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-edit {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.btn-edit:hover {
+  background: #ffeaa7;
+}
+
+.btn-delete {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.btn-delete:hover {
+  background: #f5c6cb;
+}
+
+.btn-view {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.btn-view:hover {
+  background: #bee5eb;
+}
+
+@media (max-width: 968px) {
+  .data-table {
+    font-size: 12px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 12px 8px;
+  }
+}
+
+
+

@@ -1,0 +1,114 @@
+.how-it-works {
+  padding: 80px 0;
+  background-color: #f9f9f9;
+}
+
+.how-it-works-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.section-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.section-subtitle {
+  font-size: 1.1rem;
+  color: #666;
+}
+
+.steps-timeline {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+}
+
+.steps-timeline::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #ddd;
+  transform: translateY(-50%);
+}
+
+.step-card {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  padding: 30px;
+  text-align: center;
+  width: 23%;
+  position: relative;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.step-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.step-icon {
+  font-size: 3rem;
+  color: #007bff;
+  margin-bottom: 20px;
+}
+
+.step-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.step-description {
+  font-size: 1rem;
+  color: #666;
+  line-height: 1.6;
+}
+
+@media (max-width: 992px) {
+  .steps-timeline {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .steps-timeline::before {
+    display: none; 
+  }
+
+  .step-card {
+    width: 80%;
+    margin-bottom: 30px;
+  }
+
+  .step-card:last-child {
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 576px) {
+  .section-title {
+    font-size: 2rem;
+  }
+
+  .step-card {
+    width: 95%;
+  }
+}
+
+
+
+
+
