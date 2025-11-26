@@ -46,6 +46,78 @@ const Login = () => {
       <div className="login-container">
         {/* Left Side - Illustration */}
         <div className="login-left">
+ update-login
+          {/* Logo Telvora */}
+          <div className="logo-container">
+            <div className="logo-telvora">
+              <svg className="logo-orbit" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                {/* Orbit ring dengan glow effect */}
+                <circle cx="100" cy="100" r="70" fill="none" stroke="url(#glowGradient)" strokeWidth="3" opacity="0.6">
+                  <animate attributeName="stroke-width" values="3;5;3" dur="2s" repeatCount="indefinite"/>
+                </circle>
+                
+                {/* Inner glow circle */}
+                <circle cx="100" cy="100" r="50" fill="url(#centerGlow)" opacity="0.8">
+                  <animate attributeName="r" values="50;55;50" dur="2s" repeatCount="indefinite"/>
+                </circle>
+                
+                {/* Center circle */}
+                <circle cx="100" cy="100" r="35" fill="#00ffcc" opacity="0.9"/>
+                <circle cx="100" cy="100" r="25" fill="#1a5f4a" opacity="0.3"/>
+                
+                {/* Orbit path */}
+                <path d="M 30,100 Q 100,30 170,100 Q 100,170 30,100" fill="none" stroke="rgba(0, 255, 204, 0.3)" strokeWidth="2"/>
+                
+                {/* Gradients */}
+                <defs>
+                  <radialGradient id="glowGradient">
+                    <stop offset="0%" stopColor="#00ffcc"/>
+                    <stop offset="100%" stopColor="#00ffcc" stopOpacity="0.3"/>
+                  </radialGradient>
+                  <radialGradient id="centerGlow">
+                    <stop offset="0%" stopColor="#00ffcc" stopOpacity="0.8"/>
+                    <stop offset="100%" stopColor="#00ffcc" stopOpacity="0.1"/>
+                  </radialGradient>
+                </defs>
+              </svg>
+            </div>
+            <h1 className="brand-name">TELVORA</h1>
+            <p className="brand-tagline">DATA. PROCESSED. CLARITY.</p>
+            <p className="brand-motto">NEUTER ROGLAR EAEZAEA</p>
+          </div>
+
+          {/* Network Grid Effect */}
+          <div className="network-grid">
+            <div className="grid-line grid-line-1"></div>
+            <div className="grid-line grid-line-2"></div>
+            <div className="grid-line grid-line-3"></div>
+            <div className="grid-line grid-line-4"></div>
+          </div>
+
+          {/* Data Particles */}
+          <div className="particles">
+            <div className="particle particle-1"></div>
+            <div className="particle particle-2"></div>
+            <div className="particle particle-3"></div>
+            <div className="particle particle-4"></div>
+            <div className="particle particle-5"></div>
+            <div className="particle particle-6"></div>
+          </div>
+
+          {/* Signal Waves */}
+          <div className="signal-waves">
+            <div className="wave wave-1"></div>
+            <div className="wave wave-2"></div>
+            <div className="wave wave-3"></div>
+          </div>
+
+          {/* Decorative Tech Elements */}
+          <div className="tech-circles">
+            <div className="tech-circle tech-circle-1"></div>
+            <div className="tech-circle tech-circle-2"></div>
+            <div className="tech-circle tech-circle-3"></div>
+            <div className="tech-circle tech-circle-4"></div>
+
           <div className="brand-section">
             <h1 className="brand-title">Welcome</h1>
             <p className="brand-subtitle">Welcome to the website</p>
@@ -110,6 +182,7 @@ const Login = () => {
             <div className="cloud cloud-3"></div>
             <div className="cloud cloud-4"></div>
             <div className="cloud cloud-5"></div>
+ master
           </div>
         </div>
 
@@ -117,8 +190,13 @@ const Login = () => {
         <div className="login-right">
           <div className="login-box">
             <div className="login-header">
+update-login
+              <h2 className="login-title">ADMIN LOGIN</h2>
+              <p className="login-desc">Access Telvora Analytics Portal</p>
+
               <h2 className="login-title">USER LOGIN</h2>
               <p className="login-desc">Login ke TELMI Analytics Portal</p>
+ master
             </div>
 
             <form onSubmit={handleSubmit} className="login-form">
@@ -133,7 +211,11 @@ const Login = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+ update-login
+                  placeholder="Email Address"
+
                   placeholder="Username"
+ master
                   required
                 />
               </div>
@@ -154,6 +236,8 @@ const Login = () => {
                 />
               </div>
 
+ update-login
+
               <div className="form-options">
                 <label className="checkbox-label">
                   <input type="checkbox" />
@@ -162,6 +246,7 @@ const Login = () => {
                 <a href="#" className="link-forgot">Forgot password ?</a>
               </div>
 
+ master
               {error && (
                 <div className="error-message">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -173,10 +258,22 @@ const Login = () => {
                 </div>
               )}
 
+ update-login
+              <button type="submit" className="btn-login">
+                <span>Sign In</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </button>
+
+              <div className="form-footer">
+                <p> <a href="#" className="create">Gunakan akun admin atau pengguna untuk akses ke dashboard. Sesi dikelola oleh Supabase Auth.</a></p>
+
               <button type="submit" className="btn-login">Login</button>
 
               <div className="form-footer">
                 <a href="#" className="create">Gunakan akun admin atau pengguna untuk akses ke dashboard.</a>
+ master
               </div>
             </form>
           </div>
