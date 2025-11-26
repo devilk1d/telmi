@@ -1,172 +1,676 @@
+/* Import Google Fonts - Rajdhani untuk tech look & Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* ===== RESET & BASE ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 /* ===== PAGE BACKGROUND ===== */
 .login-page {
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
   padding: 20px;
-  background: linear-gradient(135deg, #eefcf4 0%, #dff7ea 100%);
+  background: linear-gradient(135deg, #0a1f1a 0%, #1a3f2d 50%, #2d5f4a 100%);
+  font-family: 'Poppins', sans-serif;
   position: relative;
   overflow: hidden;
 }
 
-/* Lingkaran dekorasi besar di kanan */
+/* Animated tech grid background */
 .login-page::before {
   content: '';
   position: absolute;
-  right: -150px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 650px;
-  height: 650px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #b4f0d2 0%, #7ed9b1 50%, #67c39c 100%);
-  opacity: 0.55;
-  filter: blur(4px);
-}
-
-/* Lingkaran kecil-kecil */
-.login-page::after {
-  content: '';
-  position: absolute;
-  top: 10%;
-  left: 12%;
-  width: 160px;
-  height: 160px;
-  border-radius: 50%;
-  background: rgba(110, 207, 160, 0.18);
-  filter: blur(2px);
-}
-
-
-/* ===== CARD LOGIN ===== */
-.login-card {
   width: 100%;
-  max-width: 420px;
-  background: rgba(255, 255, 255, 0.65);
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(0, 255, 204, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 204, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  animation: grid-move 20s linear infinite;
+}
+
+@keyframes grid-move {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(50px, 50px); }
+}
+
+/* ===== MAIN CONTAINER ===== */
+.login-container {
+  width: 100%;
+  max-width: 1000px;
+  background: rgba(15, 25, 20, 0.95);
   border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
-  padding: 40px;
-  backdrop-filter: blur(18px);
+  box-shadow: 
+    0 30px 80px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(0, 255, 204, 0.1);
+  display: flex;
+  overflow: hidden;
   position: relative;
   z-index: 10;
+  backdrop-filter: blur(10px);
 }
 
-/* Batas atas kartu */
-.login-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #34c38f, #2ca477);
-  border-radius: 20px 20px 0 0;
-}
-
-
-/* ===== TITLE ===== */
-.login-card h2 {
-  margin: 0 0 8px 0;
-  font-size: 26px;
-  font-weight: 700;
-  color: #1a3c2d;
-}
-
-.login-subtitle {
-  font-size: 13px;
-  color: #497962;
-  margin: 0 0 28px 0;
-}
-
-
-/* ===== FORM ===== */
-.login-form {
+/* ===== LEFT SIDE - TECH ILLUSTRATION ===== */
+.login-left {
+  flex: 0 0 50%;
+  background: linear-gradient(135deg, #1a3f2d 0%, #2d5f4a 100%);
+  padding: 60px 50px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  border-right: 1px solid rgba(0, 255, 204, 0.1);
 }
 
-.login-form label {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: #1b4332;
-  margin-bottom: 6px;
-  letter-spacing: 0.3px;
+/* Logo Telvora Container */
+.logo-container {
+  position: relative;
+  z-index: 20;
+  text-align: center;
+  margin-bottom: 30px;
 }
 
-.login-form input {
+.logo-telvora {
+  width: 150px;
+  height: 150px;
+  margin: 0 auto 25px;
+  position: relative;
+  animation: logo-pulse 3s ease-in-out infinite;
+}
+
+.logo-orbit {
   width: 100%;
-  padding: 12px 16px;
-  border: 1px solid #cfe9db;
-  border-radius: 8px;
+  height: 100%;
+  filter: drop-shadow(0 0 20px rgba(0, 255, 204, 0.5));
+}
+
+@keyframes logo-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.brand-name {
+  font-size: 48px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 12px 0;
+  letter-spacing: 8px;
+  font-family: 'Rajdhani', sans-serif;
+  text-shadow: 
+    0 0 20px rgba(0, 255, 204, 0.5),
+    0 0 40px rgba(0, 255, 204, 0.3);
+}
+
+.brand-tagline {
   font-size: 14px;
-  box-sizing: border-box;
-  background: #fafffd;
-  transition: all 0.3s ease;
-  color: #1a1a1a;
+  font-weight: 500;
+  color: #00ffcc;
+  margin: 0 0 8px 0;
+  letter-spacing: 3px;
+  font-family: 'Rajdhani', sans-serif;
+  text-transform: uppercase;
 }
 
-.login-form input:focus {
-  outline: none;
-  border-color: #34c38f;
-  box-shadow: 0 0 0 3px rgba(52, 195, 143, 0.25);
+.brand-motto {
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+  letter-spacing: 2px;
+  font-family: 'Rajdhani', sans-serif;
+  text-transform: uppercase;
 }
 
-.login-form input::placeholder {
-  color: #9bbbaa;
+/* Network Grid Lines */
+.network-grid {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  overflow: hidden;
 }
 
-
-/* ===== ERROR BOX ===== */
-.login-error {
-  background: rgba(229, 57, 53, 0.05);
-  border: 1px solid rgba(229, 57, 53, 0.2);
-  color: #e53935;
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-size: 13px;
+.grid-line {
+  position: absolute;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(0, 255, 204, 0.3) 50%, 
+    transparent 100%);
+  animation: line-scan 4s ease-in-out infinite;
 }
 
-
-/* ===== BUTTON LOGIN ===== */
-.login-form button {
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #33c48c, #2d9f72);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 8px;
+.grid-line-1 {
+  width: 100%;
+  height: 2px;
+  top: 20%;
+  animation-delay: 0s;
 }
 
-.login-form button:hover {
-  box-shadow: 0 4px 12px rgba(52, 195, 143, 0.35);
-  transform: translateY(-2px);
+.grid-line-2 {
+  width: 2px;
+  height: 100%;
+  left: 30%;
+  animation-delay: 1s;
+  background: linear-gradient(180deg, 
+    transparent 0%, 
+    rgba(0, 255, 204, 0.3) 50%, 
+    transparent 100%);
 }
 
+.grid-line-3 {
+  width: 100%;
+  height: 2px;
+  bottom: 30%;
+  animation-delay: 2s;
+}
 
-/* ===== FOOTER NOTE ===== */
-.login-note {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #d4eade;
-  color: #6b8f78;
-  font-size: 12px;
+.grid-line-4 {
+  width: 2px;
+  height: 100%;
+  right: 25%;
+  animation-delay: 3s;
+  background: linear-gradient(180deg, 
+    transparent 0%, 
+    rgba(0, 255, 204, 0.3) 50%, 
+    transparent 100%);
+}
+
+@keyframes line-scan {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
+/* Data Particles */
+.particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 2;
+}
+
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #00ffcc;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(0, 255, 204, 0.8);
+  animation: particle-float 6s ease-in-out infinite;
+}
+
+.particle-1 {
+  top: 15%;
+  left: 20%;
+  animation-delay: 0s;
+}
+
+.particle-2 {
+  top: 35%;
+  left: 70%;
+  animation-delay: 1s;
+}
+
+.particle-3 {
+  top: 55%;
+  left: 15%;
+  animation-delay: 2s;
+}
+
+.particle-4 {
+  top: 75%;
+  left: 65%;
+  animation-delay: 3s;
+}
+
+.particle-5 {
+  top: 25%;
+  left: 85%;
+  animation-delay: 4s;
+}
+
+.particle-6 {
+  top: 85%;
+  left: 35%;
+  animation-delay: 5s;
+}
+
+@keyframes particle-float {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-30px) scale(1.5);
+    opacity: 1;
+  }
+}
+
+/* Signal Waves */
+.signal-waves {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 3;
+}
+
+.wave {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border: 2px solid rgba(0, 255, 204, 0.2);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: wave-expand 4s ease-out infinite;
+}
+
+.wave-1 {
+  animation-delay: 0s;
+}
+
+.wave-2 {
+  animation-delay: 1.3s;
+}
+
+.wave-3 {
+  animation-delay: 2.6s;
+}
+
+@keyframes wave-expand {
+  0% {
+    width: 100px;
+    height: 100px;
+    opacity: 1;
+  }
+  100% {
+    width: 400px;
+    height: 400px;
+    opacity: 0;
+  }
+}
+
+/* Tech Decorative Circles */
+.tech-circles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+.tech-circle {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 255, 204, 0.15);
+  background: radial-gradient(circle, rgba(0, 255, 204, 0.05) 0%, transparent 70%);
+}
+
+.tech-circle-1 {
+  width: 150px;
+  height: 150px;
+  top: -50px;
+  left: -50px;
+}
+
+.tech-circle-2 {
+  width: 200px;
+  height: 200px;
+  bottom: -80px;
+  right: -80px;
+}
+
+.tech-circle-3 {
+  width: 100px;
+  height: 100px;
+  top: 20%;
+  right: 10%;
+}
+
+.tech-circle-4 {
+  width: 120px;
+  height: 120px;
+  bottom: 15%;
+  left: 15%;
+}
+
+/* ===== RIGHT SIDE - LOGIN FORM ===== */
+.login-right {
+  flex: 1;
+  padding: 60px 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 30, 25, 0.8);
+}
+
+.login-box {
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-header {
+  margin-bottom: 40px;
   text-align: center;
 }
 
+.login-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #00ffcc;
+  margin: 0 0 8px 0;
+  letter-spacing: 3px;
+  font-family: 'Rajdhani', sans-serif;
+  text-transform: uppercase;
+  text-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+}
 
-/* ===== RESPONSIVE ===== */
-@media (max-width: 480px) {
-  .login-card {
-    padding: 28px 20px;
+.login-desc {
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+  letter-spacing: 1px;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* ===== FORM STYLES ===== */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.input-group {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(0, 255, 204, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 15px 22px 15px 50px;
+  border: 1.5px solid rgba(0, 255, 204, 0.2);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #ffffff;
+  background: rgba(0, 255, 204, 0.03);
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+  outline: none;
+}
+
+.input-group input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 300;
+}
+
+.input-group input:focus {
+  border-color: #00ffcc;
+  background: rgba(0, 255, 204, 0.08);
+  box-shadow: 
+    0 0 0 3px rgba(0, 255, 204, 0.1),
+    0 0 20px rgba(0, 255, 204, 0.2);
+}
+
+.input-group input:focus ~ .input-icon {
+  color: #00ffcc;
+}
+
+/* Form Options Row */
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: -8px 0 8px 0;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #00ffcc;
+}
+
+.link-forgot {
+  font-size: 13px;
+  font-weight: 400;
+  color: #00ffcc;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.link-forgot:hover {
+  color: #00ddaa;
+  text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+}
+
+/* Error Message */
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 18px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1.5px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  color: #ff6b6b;
+  font-size: 12.5px;
+  font-weight: 400;
+  margin-top: -10px;
+}
+
+.error-message svg {
+  flex-shrink: 0;
+  color: #ff6b6b;
+}
+
+/* Login Button */
+.btn-login {
+  width: 100%;
+  padding: 15px 24px;
+  background: linear-gradient(135deg, #00ffcc 0%, #00ddaa 100%);
+  color: #0a1f1a;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 6px 20px rgba(0, 255, 204, 0.3),
+    0 0 30px rgba(0, 255, 204, 0.2);
+  font-family: 'Rajdhani', sans-serif;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn-login:hover {
+  background: linear-gradient(135deg, #00ddaa 0%, #00ffcc 100%);
+  box-shadow: 
+    0 8px 28px rgba(0, 255, 204, 0.5),
+    0 0 40px rgba(0, 255, 204, 0.4);
+  transform: translateY(-2px);
+}
+
+.btn-login:active {
+  transform: translateY(0px);
+  box-shadow: 
+    0 4px 15px rgba(0, 255, 204, 0.3),
+    0 0 20px rgba(0, 255, 204, 0.2);
+}
+
+.btn-login svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Form Footer */
+.form-footer {
+  text-align: center;
+  margin-top: 30px;
+  padding-top: 30px;
+  border-top: 1px solid rgba(0, 255, 204, 0.1);
+}
+
+.form-footer p {
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+}
+
+.link-create {
+  font-size: 13px;
+  font-weight: 600;
+  color: #00ffcc;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.link-create:hover {
+  color: #00ddaa;
+  text-decoration: underline;
+  text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .login-container {
+    flex-direction: column;
+    max-width: 480px;
   }
-  .login-card h2 {
-    font-size: 22px;
+
+  .login-left {
+    flex: 0 0 auto;
+    padding: 50px 40px;
+    min-height: 400px;
+  }
+
+  .logo-telvora {
+    width: 120px;
+    height: 120px;
+  }
+
+  .brand-name {
+    font-size: 36px;
+    letter-spacing: 6px;
+  }
+
+  .brand-tagline {
+    font-size: 12px;
+  }
+
+  .brand-motto {
+    font-size: 10px;
+  }
+
+  .login-right {
+    padding: 50px 40px;
+  }
+
+  .network-grid,
+  .particles,
+  .signal-waves {
+    opacity: 0.5;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-page {
+    padding: 15px;
+  }
+
+  .login-left {
+    padding: 40px 30px;
+    min-height: 350px;
+  }
+
+  .logo-telvora {
+    width: 100px;
+    height: 100px;
+  }
+
+  .brand-name {
+    font-size: 30px;
+    letter-spacing: 4px;
+  }
+
+  .brand-tagline {
+    font-size: 11px;
+    letter-spacing: 2px;
+  }
+
+  .brand-motto {
+    font-size: 9px;
+  }
+
+  .login-right {
+    padding: 40px 30px;
+  }
+
+  .login-title {
+    font-size: 24px;
+  }
+
+  .input-group input {
+    padding: 13px 20px 13px 46px;
+    font-size: 13px;
+  }
+
+  .btn-login {
+    padding: 13px 20px;
+    font-size: 14px;
   }
 }

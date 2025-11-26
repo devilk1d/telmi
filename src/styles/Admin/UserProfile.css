@@ -440,6 +440,8 @@
     max-height: 90vh;
   }
 }
+
+.media{
   background: linear-gradient(135deg, #0066cc, #0052a3);
   color: #fff;
   border: none;
