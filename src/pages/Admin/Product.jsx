@@ -210,16 +210,16 @@ const Product = () => {
                       <span className="vod-badge disabled">✗</span>
                     )}
                   </td>
-                  <td className='actions-column'>
-                      <div className='action-buttons'>
-                          <button className='btn-action edit' onClick={() => handleEditPackage(pkg)}>
-                              <Edit2 size={16} />
-                          </button>
-                          <button className='btn-action delete' onClick={() => handleDeletePackage(pkg.id)}>
-                              <Trash2 size={16} />
-                          </button>
-                      </div>
-                  </td>
+                    <td className='actions-column'>
+                        <div className='action-buttons'>
+                            <button className='btn-action edit' onClick={() => handleEditPackage(pkg)}>
+                                <Edit2 size={16} />
+                            </button>
+                            <button className='btn-action delete' onClick={() => handleDeletePackage(pkg.id)}>
+                                <Trash2 size={16} />
+                            </button>
+                        </div>
+                    </td>
                 </tr>
               ))
             )}
