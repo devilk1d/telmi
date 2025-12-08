@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { getCustomers } from '../../services/api'
-import { Search, X, AlertTriangle } from 'lucide-react'
+import { getCustomers, getCustomerInsights } from '../../services/api'
+import { Search, X, AlertTriangle, Sparkles, ChevronRight } from 'lucide-react'
 
 const UserProfile = () => {
   const [customers, setCustomers] = useState([])
@@ -10,6 +10,11 @@ const UserProfile = () => {
   const [selectedCustomer, setSelectedCustomer] = useState(null)
   const [showAnalysis, setShowAnalysis] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
+  const [insightLoading, setInsightLoading] = useState(false)
+  const [recommendations, setRecommendations] = useState([])
+  const [churnInsight, setChurnInsight] = useState(null)
+  const [aiInsights, setAiInsights] = useState(null)
+  const [userCategory, setUserCategory] = useState('')
 
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -40,6 +45,7 @@ const UserProfile = () => {
     console.log('Opening analysis for customer:', customer)
     setSelectedCustomer(customer)
     setShowAnalysis(true)
+    fetchInsights(customer.customerId || customer.id)
   }
 
   const closeAnalysis = () => {
@@ -48,6 +54,10 @@ const UserProfile = () => {
       setShowAnalysis(false)
       setSelectedCustomer(null)
       setIsClosing(false)
+      setRecommendations([])
+      setChurnInsight(null)
+      setAiInsights(null)
+      setUserCategory('')
     }, 400) // Match animation duration
   }
 
@@ -56,6 +66,22 @@ const UserProfile = () => {
     if (churnRate > 70) return { level: 'Tinggi', color: 'text-red-600', bg: 'bg-red-100' }
     if (churnRate > 40) return { level: 'Sedang', color: 'text-amber-600', bg: 'bg-amber-100' }
     return { level: 'Rendah', color: 'text-green-600', bg: 'bg-green-100' }
+  }
+
+  const fetchInsights = async (customerId) => {
+    if (!customerId) return
+    try {
+      setInsightLoading(true)
+      const data = await getCustomerInsights(customerId)
+      setRecommendations(data.recommendations?.items || [])
+      setChurnInsight(data.churn || null)
+      setAiInsights(data.ai_insights || null)
+      setUserCategory(data.user_category || '')
+    } catch (error) {
+      console.error('Failed to load customer insights', error)
+    } finally {
+      setInsightLoading(false)
+    }
   }
 
   if (loading) {
@@ -288,39 +314,95 @@ const UserProfile = () => {
             {selectedCustomer ? (
             <div className="space-y-6">
               {/* Customer Info */}
-              <div className="rounded-xl bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 p-4">
-                <h3 className="text-lg font-bold text-white">
-                  {selectedCustomer.customerId || selectedCustomer.id || 'N/A'}
-                </h3>
-                <p className="mt-1 text-sm text-slate-300">Plan: <span className="font-semibold text-cyan-400">{selectedCustomer.planType || 'N/A'}</span></p>
-                <p className="text-sm text-slate-300">Device: <span className="font-semibold text-cyan-400">{selectedCustomer.device || 'N/A'}</span></p>
+              <div className="rounded-xl bg-gradient-to-r from-slate-800 to-slate-900 border border-slate-700 p-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-lg font-bold text-white">
+                      {selectedCustomer.customerId || selectedCustomer.id || 'N/A'}
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-300">Plan: <span className="font-semibold text-cyan-400">{selectedCustomer.planType || 'N/A'}</span></p>
+                    <p className="text-sm text-slate-300">Device: <span className="font-semibold text-cyan-400">{selectedCustomer.device || 'N/A'}</span></p>
+                  </div>
+                  {userCategory && (
+                    <span className="inline-flex items-center gap-2 rounded-full bg-cyan-500/15 border border-cyan-500/30 px-3 py-1 text-xs font-semibold text-cyan-300">
+                      <Sparkles size={14} /> {userCategory}
+                    </span>
+                  )}
+                </div>
               </div>
 
-              {/* Risk Assessment */}
-              <div className={`rounded-xl border p-4 ${
-                selectedCustomer.churnRate > 70 ? 'border-red-500/30 bg-red-500/10' :
-                selectedCustomer.churnRate > 40 ? 'border-amber-500/30 bg-amber-500/10' :
-                'border-emerald-500/30 bg-emerald-500/10'
-              }`}>
-                <div className="flex items-center gap-3">
-                  <AlertTriangle className={selectedCustomer.churnRate > 70 ? 'text-red-400' : selectedCustomer.churnRate > 40 ? 'text-amber-400' : 'text-emerald-400'} size={24} />
-                  <div>
-                    <h4 className="font-bold text-white">Risiko Churn: <span className={getChurnRisk(selectedCustomer).color}>{getChurnRisk(selectedCustomer).level}</span></h4>
-                    <p className="mt-1 text-sm text-slate-300">
-                      {selectedCustomer.churnRate > 70 
-                        ? 'Pelanggan ini memiliki risiko churn tinggi. Rekomendasi: Hubungi segera untuk penawaran khusus.'
-                        : selectedCustomer.churnRate > 40
-                        ? 'Pelanggan ini menunjukkan tanda-tanda ketidakpuasan. Rekomendasi: Tingkatkan kualitas layanan.'
-                        : 'Pelanggan ini loyal dengan risiko churn rendah.'}
-                    </p>
+              {/* Churn Risk */}
+              <div className="rounded-xl border border-slate-700 bg-slate-800/70 p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10 text-red-400">
+                      <AlertTriangle size={20} />
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-300">Estimated churn rate</p>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-3xl font-bold text-white">{((churnInsight?.probability || 0) * 100).toFixed(1)}%</span>
+                        <span className="text-xs font-semibold uppercase px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                          {churnInsight?.label === 'high' ? 'High' : churnInsight?.label === 'medium' ? 'Medium' : 'Low'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right text-sm text-slate-400">
+                    <p>Risk label</p>
+                    <p className="font-semibold text-white">{churnInsight?.raw_label || 'General Offer'}</p>
+                  </div>
+                </div>
+                <div className="mt-4 rounded-lg bg-slate-900/60 border border-slate-700 p-4">
+                  <p className="text-sm font-semibold text-white mb-2">AI Risk Analysis</p>
+                  <p className="text-sm text-slate-300 leading-relaxed">
+                    {aiInsights?.churn_analysis || 'Analisis churn belum tersedia untuk pelanggan ini.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Recommendations */}
+              <div className="rounded-xl border border-slate-700 bg-slate-800/70 p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2 text-white">
+                    <Sparkles size={18} className="text-cyan-300" />
+                    <h4 className="text-lg font-bold">Product Recommendations</h4>
+                  </div>
+                  {insightLoading && <span className="text-xs text-slate-400">Memuat rekomendasi...</span>}
+                </div>
+                <div className="space-y-3">
+                  {(recommendations || []).map((item, idx) => (
+                    <div key={`${item.product_name}-${idx}`} className="rounded-lg border border-slate-700 bg-slate-900/60 p-3 flex gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-700 text-slate-200 text-xs font-semibold">#{idx + 1}</div>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-white">{item.product_name}</p>
+                        <p className="text-xs text-slate-400 mt-1">
+                          {item.category} · {item.duration_days} days · Rp {Number(item.price || 0).toLocaleString('id-ID')}
+                        </p>
+                        {item.reasons?.length > 0 && (
+                          <p className="text-xs text-slate-300 mt-2">{item.reasons[0]}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 rounded-lg bg-slate-900/60 border border-slate-700 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5"><Sparkles size={16} className="text-cyan-300" /></div>
+                    <div>
+                      <p className="text-sm font-semibold text-white mb-1">AI Analysis</p>
+                      <p className="text-sm text-slate-300 leading-relaxed">
+                        {aiInsights?.product_recommendation || 'Analisis AI belum tersedia untuk pelanggan ini.'}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Usage Pattern */}
+              {/* Usage Pattern & Finance */}
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-xl border border-slate-800 bg-slate-800/50 p-4">
-                  <h4 className="font-bold text-white mb-3">Pola Penggunaan</h4>
+                <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+                  <h4 className="font-bold text-white mb-3 flex items-center gap-2">Pola Penggunaan <ChevronRight size={14} className="text-slate-400" /></h4>
                   <ul className="space-y-2 text-sm text-slate-300">
                     <li>📊 Data: <span className="font-semibold text-white">{(selectedCustomer.dataUsage || 0).toFixed(1)} GB</span></li>
                     <li>🎬 Video: <span className="font-semibold text-white">{parseFloat(selectedCustomer.videoPercentage || 0).toFixed(1)}%</span></li>
@@ -330,13 +412,13 @@ const UserProfile = () => {
                   </ul>
                 </div>
 
-                <div className="rounded-xl border border-slate-800 bg-slate-800/50 p-4">
-                  <h4 className="font-bold text-white mb-3">Detail Finansial</h4>
+                <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+                  <h4 className="font-bold text-white mb-3 flex items-center gap-2">Detail Finansial <ChevronRight size={14} className="text-slate-400" /></h4>
                   <ul className="space-y-2 text-sm text-slate-300">
                     <li>💰 Pengeluaran Bulanan: <span className="font-semibold text-white">Rp {(selectedCustomer.totalSpend || 0).toLocaleString('id-ID')}</span></li>
                     <li>💳 Top-up Frekuensi: <span className="font-semibold text-white">{selectedCustomer.topupFreq || 0}x</span></li>
                     <li>⚠️ Jumlah Keluhan: <span className="font-semibold text-white">{selectedCustomer.complaintCount || 0}</span></li>
-                    <li>🎯 Target Offer: <span className="font-semibold text-cyan-400">{selectedCustomer.targetOffer || 'N/A'}</span></li>
+                    <li>🎯 Target Offer: <span className="font-semibold text-cyan-400">{selectedCustomer.targetOffer || 'General Offer'}</span></li>
                   </ul>
                 </div>
               </div>

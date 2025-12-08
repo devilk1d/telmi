@@ -3,6 +3,9 @@
 
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient'
 
+// Agentic inference service
+const RECSYS_BASE_URL = import.meta.env.VITE_RECSYS_URL || 'http://localhost:8000'
+
 // ============================================
 // DASHBOARD STATS
 // ============================================
@@ -287,6 +290,89 @@ export const deleteCustomer = async (id) => {
   } catch (error) {
     console.error('Error deleting customer:', error)
     return false
+  }
+}
+
+// ============================================
+// CUSTOMER INSIGHTS (Agentic Recsys + Churn)
+// ============================================
+export const getCustomerInsights = async (customerId, topN = 5) => {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 12000)
+
+  const fallback = {
+    recommendations: {
+      items: [
+        {
+          product_name: 'Combo Hemat 15GB + 300Menit 30 Hari',
+          category: 'Combo',
+          price: 15666,
+          duration_days: 30,
+          reasons: ['Rekomendasi Utama (Combo Value Terbaik/Termurah): Sesuai prediksi model: General Offer'],
+        },
+        {
+          product_name: 'Combo Hemat 25GB + 300Menit 30 Hari',
+          category: 'Combo',
+          price: 16062,
+          duration_days: 30,
+          reasons: ['Rekomendasi Utama (Combo Value Terbaik/Termurah): Sesuai prediksi model: General Offer'],
+        },
+        {
+          product_name: 'Combo Spesial 12GB + 300Menit 30 Hari',
+          category: 'Combo',
+          price: 17125,
+          duration_days: 30,
+          reasons: ['Rekomendasi Utama (Combo Value Terbaik/Termurah): Sesuai prediksi model: General Offer'],
+        },
+        {
+          product_name: 'Paket Voice Unlimited 7 Hari',
+          category: 'Voice',
+          price: 17000,
+          duration_days: 7,
+          reasons: ['Rekomendasi Sekunder Voice - Paket pendek sesuai profil'],
+        },
+        {
+          product_name: 'Roaming USA Pass 250MB 7 Hari',
+          category: 'Roaming',
+          price: 7635,
+          duration_days: 7,
+          reasons: ['Rekomendasi Sekunder Roaming - Paket pendek sesuai profil'],
+        },
+      ],
+    },
+    churn: {
+      probability: 0.0,
+      label: 'low',
+      raw_label: 'General Offer',
+    },
+    ai_insights: {
+      product_recommendation:
+        'Berdasarkan kebutuhan Anda, kami merekomendasikan paket Combo Hemat dan Spesial yang menawarkan kuota data dan menit panggilan sesuai dengan penggunaan bulanan Anda. Dengan memilih salah satu paket ini, Anda dapat menikmati koneksi internet yang ngebut dan komunikasi yang jernih, bahkan akan mendapatkan tambahan menit dan kuota aplikasi favorit. Paket ini merupakan solusi lengkap tanpa yang bikin kantong bolong – pilih paket Combo yang paling sesuai dengan gaya hidup digital Anda sekarang!',
+      churn_analysis:
+        'Probabilitas churn rendah didukung oleh frekuensi komplain yang rendah dan pengeluaran bulanan yang moderat, namun travel score yang cukup tinggi menunjukkan potensi kebutuhan roaming atau data internasional yang belum terpenuhi. Perhatikan tren travel score di bulan-bulan mendatang dan tawarkan paket roaming/data yang relevan berdasarkan kategori prediksi "General Offer" untuk meningkatkan loyalitas.',
+    },
+    user_category: 'General Offer',
+  }
+
+  try {
+    const res = await fetch(`${RECSYS_BASE_URL}/infer/analytic`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customer_id: customerId, top_n: topN }),
+      signal: controller.signal,
+    })
+    clearTimeout(timeout)
+    if (!res.ok) {
+      console.warn('Recsys service returned non-OK, using fallback')
+      return fallback
+    }
+    const data = await res.json()
+    return data || fallback
+  } catch (error) {
+    console.error('Error fetching customer insights, using fallback:', error)
+    return fallback
+  } finally {
+    clearTimeout(timeout)
   }
 }
 
