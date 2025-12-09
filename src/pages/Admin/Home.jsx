@@ -3,24 +3,37 @@ import { Pie } from 'react-chartjs-2'
 import { Chart, ArcElement, Tooltip, Legend } from 'chart.js'
 Chart.register(ArcElement, Tooltip, Legend)
 import { Users, Package, AlertTriangle, Sparkles } from 'lucide-react'
-import { getDashboardStats } from '../../services/api'
+import { getDashboardStats, getChurnComposition } from '../../services/api'
 
 const Home = () => {
   const [stats, setStats] = useState(null)
+  const [churnComposition, setChurnComposition] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getDashboardStats()
-        setStats(data)
+        setLoading(true)
+        setError(null)
+        
+        // Fetch both dashboard stats and churn composition in parallel
+        const [dashboardData, churnData] = await Promise.all([
+          getDashboardStats(),
+          getChurnComposition()
+        ])
+        
+        setStats(dashboardData)
+        setChurnComposition(churnData)
       } catch (error) {
-        console.error('Error fetching dashboard stats:', error)
+        console.error('Error fetching dashboard data:', error)
+        setError('Gagal memuat data dashboard')
       } finally {
         setLoading(false)
       }
     }
-    fetchStats()
+    
+    fetchData()
   }, [])
 
   if (loading) {
@@ -37,7 +50,7 @@ const Home = () => {
   if (!stats) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-950">
-        <p className="text-slate-400">Error memuat statistik</p>
+        <p className="text-slate-400">{error || 'Error memuat statistik'}</p>
       </div>
     )
   }
@@ -65,7 +78,7 @@ const Home = () => {
     },
     {
       label: 'Alert Churn',
-      value: (stats.churnRate?.toFixed(1) || 0) + '%',
+      value: (churnComposition?.churn_rate?.toFixed(1) || 0) + '%',
       icon: AlertTriangle,
       color: 'from-amber-500 to-amber-600',
       bgColor: 'bg-amber-500/10',
@@ -75,19 +88,27 @@ const Home = () => {
     },
   ]
 
+  // Prepare pie chart data dari churn composition API
   const pieData = {
-    labels: ['Tinggi', 'Sedang', 'Rendah'],
+    labels: [
+      `🔴 Tinggi (${churnComposition?.composition?.high?.count || 0} user)`,
+      `🟡 Sedang (${churnComposition?.composition?.medium?.count || 0} user)`,
+      `🟢 Rendah (${churnComposition?.composition?.low?.count || 0} user)`
+    ],
     datasets: [
       {
-        label: 'Tingkat Risiko',
-        data: [30, 45, 25],
+        label: 'Tingkat Risiko Churn',
+        data: [
+          churnComposition?.composition?.high?.percentage || 0,
+          churnComposition?.composition?.medium?.percentage || 0,
+          churnComposition?.composition?.low?.percentage || 0
+        ],
         backgroundColor: ['#ef4444', '#f59e0b', '#10b981'],
         borderColor: '#0f1727',
         borderWidth: 3,
       },
     ],
   }
-
 
   return (
     <div className="w-full space-y-4 md:space-y-6 animate-fade-in-up">
@@ -132,57 +153,64 @@ const Home = () => {
         })}
       </div>
 
-      {/* Charts Grid */}
-      <div className="grid gap-4 md:gap-6">
-        {/* Pie Chart */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] animate-fade-in-up delay-600 overflow-hidden w-full">
-          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-5 md:mb-6">
-            <div className="inline-flex p-1.5 sm:p-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
-              <Package className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
+      {/* Churn Composition Info */}
+      {churnComposition && (
+        <div className="grid gap-4 md:gap-6">
+          {/* Pie Chart */}
+          <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden w-full">
+            <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-5 md:mb-6">
+              <div className="inline-flex p-1.5 sm:p-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                <Package className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
+              </div>
+              <h2 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight">Komposisi Risiko Churn</h2>
             </div>
-            <h2 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight">Komposisi Risiko</h2>
-          </div>
-          <div className="relative w-full h-64 sm:h-72 md:h-80">
-            <Pie
-              data={pieData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                layout: {
-                  padding: {
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    bottom: 0
-                  }
-                },
-                plugins: {
-                  legend: {
-                    position: 'bottom',
-                    labels: {
-                      padding: 20,
-                      color: '#e2e8f0',
-                      font: {
-                        size: 12,
-                        weight: '500',
+            <div className="relative w-full h-64 sm:h-72 md:h-80">
+              <Pie
+                data={pieData}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  layout: {
+                    padding: {
+                      left: 0,
+                      right: 0,
+                      top: 0,
+                      bottom: 0
+                    }
+                  },
+                  plugins: {
+                    legend: {
+                      position: 'bottom',
+                      labels: {
+                        padding: 20,
+                        color: '#e2e8f0',
+                        font: {
+                          size: 12,
+                          weight: '500',
+                        },
                       },
                     },
+                    tooltip: {
+                      backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                      titleColor: '#fff',
+                      bodyColor: '#e2e8f0',
+                      borderColor: '#334155',
+                      borderWidth: 1,
+                      padding: 12,
+                      cornerRadius: 8,
+                      callbacks: {
+                        label: function(context) {
+                          return `${context.label}: ${context.parsed}%`
+                        }
+                      }
+                    },
                   },
-                  tooltip: {
-                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                    titleColor: '#fff',
-                    bodyColor: '#e2e8f0',
-                    borderColor: '#334155',
-                    borderWidth: 1,
-                    padding: 12,
-                    cornerRadius: 8,
-                  },
-                },
-              }}
-            />
+                }}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

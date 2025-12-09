@@ -696,84 +696,65 @@ export const createRecommendation = async (recommendation) => {
 }
 
 // ============================================
-// ANALYTICS
+// ANALYTICS – CHURN COMPOSITION
 // ============================================
-export const getAnalytics = async () => {
-  if (!isSupabaseConfigured) {
-    return {
-      modelMetrics: {
-        accuracy: 94.5,
-        precision: 92.3,
-        recall: 91.8,
-        f1Score: 92,
-      },
-      churnAnalysis: {
-        churnRate: 8.5,
-        churnRiskLevel: 'Medium',
-        avgChurnSpend: 150000,
-      },
-      behaviorTrends: {
-        videoBandwidth: 65,
-        voiceBandwidth: 35,
-        postpaidRatio: 60,
-        prepaidRatio: 40,
-      },
-      topProducts: [],
-    }
+export const getChurnComposition = async () => {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 30000) // 30s timeout (looping 10k users)
+
+  const fallback = {
+    total_users: 10000,
+    composition: {
+      high: { count: 850, percentage: 8.5 },
+      medium: { count: 4500, percentage: 45.0 },
+      low: { count: 4650, percentage: 46.5 }
+    },
+    churn_rate: 8.5,
+    revenue_at_risk: 123456789,
+    generated_at: new Date().toISOString()
   }
 
   try {
-    // Get customer risk distribution dari customer_profile
-    const { data: customers } = await supabase
-      .from('customer_profile')
-      .select('target_offer, monthly_spend, complaint_count')
+    const res = await fetch(`${RECSYS_BASE_URL}/analytics/churn-composition`, {
+      method: 'GET',
+      signal: controller.signal,
+    })
+    clearTimeout(timeout)
 
-    const riskLevels = {}
-    let totalRevenue = 0
+    if (!res.ok) {
+      console.warn(`⚠️ Churn composition API returned status ${res.status}, using fallback`)
+      return fallback
+    }
 
-    customers?.forEach(c => {
-      // Tentukan risk level berdasarkan target_offer dan complaint_count
-      let risk = 'Rendah'
-      if (c.complaint_count && c.complaint_count > 2) {
-        risk = 'Tinggi'
-      } else if (c.complaint_count && c.complaint_count > 0) {
-        risk = 'Sedang'
-      } else if (c.target_offer === 'churn_prevention') {
-        risk = 'Tinggi'
-      }
-      
-      riskLevels[risk] = (riskLevels[risk] || 0) + 1
-      totalRevenue += parseFloat(c.monthly_spend) || 0
+    const data = await res.json()
+    return data || fallback
+  } catch (error) {
+    console.error('Error fetching churn composition, using fallback:', error)
+    return fallback
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+// ============================================
+// ANALYTICS
+// ============================================
+export const getAnalytics = async () => {
+  try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 30000)
+
+    const res = await fetch(`${RECSYS_BASE_URL}/analytics/overview`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
     })
 
-    // Get top products dari product_catalog
-    const { data: packages } = await supabase
-      .from('product_catalog')
-      .select('*')
-      .order('price', { ascending: false })
-      .limit(5)
+    clearTimeout(timeout)
+    if (!res.ok) throw new Error(`Analytics fetch failed: ${res.statusText}`)
 
-    return {
-      modelMetrics: {
-        accuracy: 94.5,
-        precision: 92.3,
-        recall: 91.8,
-        f1Score: 92,
-      },
-      churnAnalysis: {
-        churnRate: 8.5,
-        churnRiskLevel: 'Medium',
-        avgChurnSpend: (totalRevenue * 12) / (customers?.length || 1), // Convert monthly to annual
-        riskDistribution: riskLevels,
-      },
-      behaviorTrends: {
-        videoBandwidth: 65,
-        voiceBandwidth: 35,
-        postpaidRatio: 60,
-        prepaidRatio: 40,
-      },
-      topProducts: packages || [],
-    }
+    const data = await res.json()
+    return data
   } catch (error) {
     console.error('Error fetching analytics:', error)
     return null

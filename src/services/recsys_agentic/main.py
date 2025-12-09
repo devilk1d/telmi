@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from typing import List, Literal, Optional, Dict, Any
+from collections import Counter
 from functools import lru_cache
 import time
 import requests
@@ -92,6 +93,7 @@ class ProductSimulationResponse(BaseModel):
     conversion_rate: float
     segments: Dict[str, int]
     recommendation: str
+    total_users: Optional[int] = None
     generated_at: str
 
 # ---------- Load artifacts ----------
@@ -130,6 +132,38 @@ gemini_last_call_time = 0  # Track last API call to rate limit
 gemini_call_interval = 2  # Minimum seconds between calls
 gemini_last_call_time = 0  # Track last API call to rate limit
 gemini_call_interval = 2  # Minimum seconds between calls
+
+
+def fetch_all_users_paginated(page_size: int = 1000, max_attempts: int = 20) -> List[Dict[str, Any]]:
+    """Fetch all customer_profile rows with pagination (same pattern as simulate_product_impact)."""
+    if supabase is None:
+        raise HTTPException(status_code=503, detail='Database not configured')
+
+    all_users: List[Dict[str, Any]] = []
+    page = 0
+    attempt = 0
+    empty_batches = 0
+
+    while attempt < max_attempts:
+        start_range = len(all_users)
+        end_range = len(all_users) + page_size - 1
+
+        res = supabase.table('customer_profile').select('*').range(start_range, end_range).execute()
+        batch_size = len(res.data) if res.data else 0
+
+        if batch_size > 0:
+            all_users.extend(res.data)
+            empty_batches = 0
+        else:
+            empty_batches += 1
+
+        if empty_batches >= 2:
+            break
+
+        page += 1
+        attempt += 1
+
+    return all_users
 
 
 def call_ollama_safe(prompt: str) -> str:
@@ -356,41 +390,93 @@ def fetch_products() -> pd.DataFrame:
     return df
 
 
-def compute_churn_bucket(pred_label: str, proba: float, user_row: Dict[str, Any]) -> str:
-    """Rule-based churn bucket inspired by notebook logic."""
-    # Thresholds from global averages with fallbacks
-    avg_data = float(global_averages.get('avg_data_usage_gb', 0)) if global_averages else 0
-    avg_call = float(global_averages.get('avg_call_duration', 0)) if global_averages else 0
-    avg_sms = float(global_averages.get('sms_freq', 0)) if global_averages else 0
-    avg_topup = float(global_averages.get('topup_freq', 0)) if global_averages else 0
-
+def compute_churn_bucket(pred_label: str, user_row: Dict[str, Any], global_avgs: Dict[str, float]) -> str:
+    """
+    Compute churn risk bucket RULES-BASED (sesuai notebook Cell 5 logic).
+    
+    Rules:
+    🔴 HIGH RISK:
+       - Prediksi model = 'Retention Offer'
+    
+    🟡 MEDIUM RISK:
+       - BUKAN Retention Offer
+       - ADA complaint
+       - MINIMAL 2 indikator usage (data/call/sms) di bawah rata-rata
+       - topup_freq di bawah rata-rata
+    
+    🟢 LOW RISK (multiple cases):
+       CASE A: no complaint + minimal 2 usage >= rata-rata
+       CASE B: ada complaint + topup >= rata-rata
+       CASE C: no complaint + semua usage >= rata-rata
+       CASE D: no complaint + topup <= rata-rata + minimal 1 usage >= rata-rata
+       CASE E: no complaint + topup >= rata-rata + semua usage >= rata-rata
+    """
+    # Extract thresholds dari global_averages
+    avg_data = float(global_avgs.get('avg_data_usage_gb', 0))
+    avg_call = float(global_avgs.get('avg_call_duration', 0))
+    avg_sms = float(global_avgs.get('sms_freq', 0))
+    avg_topup = float(global_avgs.get('topup_freq', 0))
+    
+    # Extract user values
     usage_data = float(user_row.get('avg_data_usage_gb') or 0)
     usage_call = float(user_row.get('avg_call_duration') or 0)
     usage_sms = float(user_row.get('sms_freq') or 0)
     usage_topup = float(user_row.get('topup_freq') or 0)
     complaints = float(user_row.get('complaint_count') or 0)
-
+    
+    has_complaint = complaints > 0
+    
+    # Below/above average masks
     below_data = usage_data < avg_data
     below_call = usage_call < avg_call
     below_sms = usage_sms < avg_sms
     below_topup = usage_topup < avg_topup
-    num_below_usage = sum([below_data, below_call, below_sms])
-
+    
     aboveeq_data = usage_data >= avg_data
     aboveeq_call = usage_call >= avg_call
     aboveeq_sms = usage_sms >= avg_sms
+    aboveeq_topup = usage_topup >= avg_topup
+    
+    # Count indicators
+    num_below_usage = sum([below_data, below_call, below_sms])
     num_above_usage = sum([aboveeq_data, aboveeq_call, aboveeq_sms])
-
-    # HIGH: model says Retention Offer or proba high
-    if pred_label == 'Retention Offer' or proba >= 0.50:
+    all_usage_above = aboveeq_data and aboveeq_call and aboveeq_sms
+    
+    # === HIGH RISK ===
+    if pred_label == 'Retention Offer':
         return 'high'
-
-    # MEDIUM: complaints + usage mostly below avg + low topup
-    if complaints > 0 and num_below_usage >= 2 and below_topup:
+    
+    # === MEDIUM RISK ===
+    # NOT Retention + HAS complaint + 2+ usage below avg + topup below avg
+    if (not (pred_label == 'Retention Offer') and 
+        has_complaint and 
+        num_below_usage >= 2 and 
+        below_topup):
         return 'medium'
-
-    # LOW default
-    return 'low'
+    
+    # === LOW RISK (multiple cases) ===
+    # CASE A: no complaint + minimal 2 usage >= avg
+    if not has_complaint and num_above_usage >= 2:
+        return 'low'
+    
+    # CASE B: ada complaint + topup >= avg (loyal tapi cerewet)
+    if has_complaint and aboveeq_topup:
+        return 'low'
+    
+    # CASE C: no complaint + semua usage >= avg
+    if not has_complaint and all_usage_above:
+        return 'low'
+    
+    # CASE D: no complaint + topup <= avg + minimal 1 usage >= avg
+    if not has_complaint and usage_topup <= avg_topup and num_above_usage >= 1:
+        return 'low'
+    
+    # CASE E: no complaint + topup >= avg + semua usage >= avg
+    if not has_complaint and aboveeq_topup and all_usage_above:
+        return 'low'
+    
+    # Default: MEDIUM (untuk case yang tidak masuk LOW atau HIGH)
+    return 'medium'
 
 
 def recommend_products(pred_label: str, user_row: Dict[str, Any], products_df: pd.DataFrame, total_recommendations: int) -> List[RecommendationItem]:
@@ -494,28 +580,43 @@ def simulate_product_impact(new_product: Dict[str, Any]) -> Dict[str, Any]:
     if clf is None or label_encoder is None:
         raise HTTPException(status_code=500, detail='Model not loaded')
 
-    # Fetch ALL customers using pagination (no limit)
+    # Fetch ALL customers using pagination (Supabase max ~1000 per request)
     all_users = []
     page = 0
     page_size = 1000
-    has_more = True
+    max_attempts = 20  # Safety limit untuk prevent infinite loop
+    attempt = 0
+    empty_batches = 0  # Counter untuk batches kosong berturut-turut
 
-    while has_more:
-        res = supabase.table('customer_profile').select('*').range(page * page_size, (page + 1) * page_size - 1).execute()
+    while attempt < max_attempts:
+        # Gunakan len(all_users) sebagai offset yang akurat (bukan page * page_size)
+        # Karena data mungkin tidak selalu eksak 1000 per batch
+        start_range = len(all_users)
+        end_range = len(all_users) + page_size - 1
         
-        if res.data and len(res.data) > 0:
+        print(f"   📥 Fetching batch {page + 1} (rows {start_range}-{end_range})...")
+        res = supabase.table('customer_profile').select('*').range(start_range, end_range).execute()
+        
+        batch_size = len(res.data) if res.data else 0
+        print(f"   ✅ Got {batch_size} users | Total collected: {len(all_users) + batch_size}")
+        
+        # Tambahkan data ke list JIKA ada
+        if batch_size > 0:
             all_users.extend(res.data)
-            page += 1
-            # If we got less than page_size, we've reached the end
-            if len(res.data) < page_size:
-                has_more = False
+            empty_batches = 0  # Reset counter saat ada data
         else:
-            has_more = False
-
-    if not all_users:
-        raise HTTPException(status_code=404, detail='No customers found')
-
-    print(f"✅ Fetched {len(all_users)} customers for simulation")
+            empty_batches += 1
+        
+        # Jika dapat 2+ batches kosong berturut-turut, STOP (truly no more data)
+        if empty_batches >= 2:
+            print(f"   🛑 No data in {empty_batches} consecutive batches - pagination complete")
+            break
+        
+        # Selalu lanjut ke batch berikutnya
+        page += 1
+        attempt += 1
+    
+    print(f"   ✅ Pagination complete after {page} batches")
 
     # Build features DataFrame properly (batch processing)
     df_users = pd.DataFrame(all_users)
@@ -580,7 +681,8 @@ def simulate_product_impact(new_product: Dict[str, Any]) -> Dict[str, Any]:
         'revenue': revenue,
         'conversion_rate': conversion_rate,
         'segments': segments,
-        'recommendation': recommendation
+        'recommendation': recommendation,
+        'total_users': total_users
     }
 
 
@@ -611,7 +713,7 @@ def infer_analytic(payload: AnalyticRequest):
     except Exception:
         churn_proba = 0.0
 
-    churn_label = compute_churn_bucket(pred_label, churn_proba, customer_row)
+    churn_label = compute_churn_bucket(pred_label, customer_row, global_averages)
 
     # Products + recommendations
     products_df = fetch_products()
@@ -666,79 +768,366 @@ def simulate_product(payload: ProductSimulationRequest):
         conversion_rate=result['conversion_rate'],
         segments=result['segments'],
         recommendation=result['recommendation'],
+        total_users=result.get('total_users'),
         generated_at=datetime.now(timezone.utc).isoformat()
     )
 
 
-@app.get("/analytics/churn-composition")
-def get_churn_composition():
-    """Get churn bucket composition from all customers."""
-    if supabase is None:
-        raise HTTPException(status_code=503, detail='Database not configured')
+@app.get("/analytics/overview")
+def analytics_overview():
+    """Global analytics: behaviour trends + product effectiveness (rule-based, no AI)."""
     if clf is None or label_encoder is None:
         raise HTTPException(status_code=500, detail='Model not loaded')
 
-    # Fetch all customers with pagination
-    all_users = []
-    page = 0
-    page_size = 1000
-    has_more = True
-
-    while has_more:
-        res = supabase.table('customer_profile').select('*').range(page * page_size, (page + 1) * page_size - 1).execute()
-        if res.data and len(res.data) > 0:
-            all_users.extend(res.data)
-            page += 1
-            if len(res.data) < page_size:
-                has_more = False
-        else:
-            has_more = False
-
+    # 1) Ambil semua user
+    all_users = fetch_all_users_paginated()
     if not all_users:
-        return {"high": 0, "medium": 0, "low": 0}
+        raise HTTPException(status_code=404, detail='No users found')
 
-    # Build features DataFrame
+    # 2) Siapkan DataFrame dan features (re-use logic dari simulate_product_impact)
     df_users = pd.DataFrame(all_users)
     numeric_features_list = [
         'avg_data_usage_gb', 'pct_video_usage', 'avg_call_duration', 'sms_freq',
         'monthly_spend', 'topup_freq', 'travel_score', 'complaint_count'
     ]
-    
+
     X = df_users.copy()
     for col in numeric_features_list:
         if col in X.columns:
             X[col] = X[col].astype(str).str.replace(',', '.')
             X[col] = pd.to_numeric(X[col], errors='coerce').fillna(0)
-    
+
     if 'avg_call_duration' in X.columns:
         X['avg_call_duration'] = X['avg_call_duration'].abs()
     if 'monthly_spend' in X.columns:
         X['monthly_spend'] = X['monthly_spend'].abs()
-    
+
     for drop_col in ('customer_id', 'target_offer', 'target_encoded'):
         if drop_col in X.columns:
             X = X.drop(columns=[drop_col])
 
-    # Predict all users
+    # 3) Prediksi label
     all_preds_idx = clf.predict(X)
     all_labels = label_encoder.inverse_transform(all_preds_idx)
 
-    # Get churn probabilities
-    class_list = list(label_encoder.classes_)
+    total_users = len(df_users)
+    
+    # 3.5) Model Performance Metrics (sesuai notebook cell 9)
+    model_performance = {
+        'accuracy': None,
+        'total_classes': len(label_encoder.classes_),
+        'classes': label_encoder.classes_.tolist()
+    }
+
+    if 'target_offer' in df_users.columns:
+        from sklearn.metrics import accuracy_score
+
+        y_raw = df_users['target_offer']
+        if y_raw.notna().any():
+            class_set = set(label_encoder.classes_)
+
+            # 1) String match (trim, case-sensitive to preserve class names)
+            y_str = y_raw.astype(str).str.strip()
+            mask_valid_str = y_str.isin(class_set)
+            if mask_valid_str.any():
+                acc = accuracy_score(y_str[mask_valid_str].values, np.array(all_labels)[mask_valid_str])
+                model_performance['accuracy'] = round(acc * 100, 2)
+            else:
+                # 2) Numeric decode -> inverse label_encoder
+                y_num = pd.to_numeric(y_raw, errors='coerce')
+                mask_num = y_num.notna()
+                if mask_num.any():
+                    try:
+                        y_int = y_num[mask_num].astype(int).values
+                        y_true_decoded = label_encoder.inverse_transform(y_int)
+                        acc = accuracy_score(y_true_decoded, np.array(all_labels)[mask_num])
+                        model_performance['accuracy'] = round(acc * 100, 2)
+                    except Exception:
+                        model_performance['accuracy'] = None
+
+    # 4) Behaviour trends
+    high_data_threshold = None
+    high_data_users = 0
+    q75_usage = None
+    if 'avg_data_usage_gb' in df_users.columns:
+        q75_usage = df_users['avg_data_usage_gb'].quantile(0.75)
+        high_data_threshold = max(10.0, q75_usage)
+        high_data_users = int((df_users['avg_data_usage_gb'] >= high_data_threshold).sum())
+
+    plan_spend = {'Prepaid': 0.0, 'Postpaid': 0.0}
+    plan_counts = {'Prepaid': 0, 'Postpaid': 0}
+    if 'plan_type' in df_users.columns:
+        spend_by_plan = df_users.groupby('plan_type')['monthly_spend'].mean().to_dict()
+        plan_spend['Prepaid'] = float(spend_by_plan.get('Prepaid', 0))
+        plan_spend['Postpaid'] = float(spend_by_plan.get('Postpaid', 0))
+        counts = df_users['plan_type'].value_counts().to_dict()
+        plan_counts['Prepaid'] = int(counts.get('Prepaid', 0))
+        plan_counts['Postpaid'] = int(counts.get('Postpaid', 0))
+
+    video_voice = {
+        'video_lovers': 0,
+        'voice_lovers': 0,
+        'balanced': 0,
+        'median_call': 0.0
+    }
+    if 'pct_video_usage' in df_users.columns and 'avg_call_duration' in df_users.columns:
+        video_pct = df_users['pct_video_usage'].values
+        call_dur = df_users['avg_call_duration'].values
+        median_call = float(np.median(call_dur)) if len(call_dur) else 0.0
+        video_lovers_mask = video_pct >= 0.6
+        voice_lovers_mask = (video_pct <= 0.4) & (call_dur >= median_call)
+        balanced_mask = ~(video_lovers_mask | voice_lovers_mask)
+
+        video_voice = {
+            'video_lovers': int(video_lovers_mask.sum()),
+            'voice_lovers': int(voice_lovers_mask.sum()),
+            'balanced': int(balanced_mask.sum()),
+            'median_call': median_call
+        }
+
+    # 5) Top products - OPTIMIZED: Pre-compute & vectorized operations (sesuai notebook cell 11)
+    products_df = fetch_products()
+    all_recs = []
+    
+    print(f"   📊 Menghitung top products dari {total_users} user (optimized)...")
+    
+    # OPTIMIZATION 1: Pre-compute products per category (sekali saja, bukan per-user)
+    products_by_cat = {}
+    for cat in TARGET_TO_CATEGORY_MAP.values():
+        cat_products = products_df[products_df['category'] == cat].copy()
+        # Pre-sort by price untuk setiap kategori
+        products_by_cat[cat] = cat_products.sort_values('price', ascending=False)
+    
+    # OPTIMIZATION 2: Vectorized budget array
+    budgets = df_users['monthly_spend'].values
+    
+    # OPTIMIZATION 3: Batch processing dengan minimal pandas operations
+    start_time = time.time()
+    
+    for idx in range(total_users):
+        pred_label = all_labels[idx]
+        user_budget = budgets[idx]
+        
+        # Get primary category
+        cat_primer = TARGET_TO_CATEGORY_MAP.get(pred_label)
+        
+        if cat_primer and cat_primer in products_by_cat:
+            cat_prods = products_by_cat[cat_primer]
+            
+            # Quick filtering: hanya ambil produk dalam budget
+            affordable = cat_prods[cat_prods['price'] <= user_budget]
+            
+            if not affordable.empty:
+                # Ambil top 3 termahal dalam budget (sudah sorted descending)
+                top_recs = affordable.head(3)['product_name'].tolist()
+                all_recs.extend(top_recs)
+            else:
+                # Fallback: ambil yang termurah
+                if not cat_prods.empty:
+                    all_recs.append(cat_prods.iloc[-1]['product_name'])
+        
+        # Progress log setiap 2500 user
+        if (idx + 1) % 2500 == 0:
+            elapsed = time.time() - start_time
+            print(f"   ... processed {idx + 1}/{total_users} users ({elapsed:.1f}s)")
+    
+    elapsed_total = time.time() - start_time
+    print(f"   ✅ Completed in {elapsed_total:.2f} seconds")
+    
+    # Hitung top 10 produk yang paling sering direkomendasikan
+    product_counter = Counter(all_recs)
+    total_recs = len(all_recs)
+    top_products = []
+    for prod_name, cnt in product_counter.most_common(10):
+        top_products.append({
+            'product_name': prod_name,
+            'count': cnt,
+            'percentage': round((cnt / total_recs) * 100, 1) if total_recs else 0.0
+        })
+
+    return {
+        'total_users': total_users,
+            'model_performance': model_performance,
+        'high_data': {
+            'count': high_data_users,
+            'percentage': round((high_data_users / total_users) * 100, 1) if total_users else 0.0,
+            'threshold': high_data_threshold,
+            'q75_usage': q75_usage
+        },
+        'plan_spend': plan_spend,
+        'plan_counts': plan_counts,
+        'video_voice': video_voice,
+        'top_products': top_products,
+        'generated_at': datetime.now(timezone.utc).isoformat()
+    }
+
+
+@app.get("/analytics/churn-composition")
+def get_churn_composition():
+    """
+    Compute churn risk composition untuk ALL customers (10k users).
+    Menghitung: Low Risk, Medium Risk, High Risk distribution.
+    Output: data untuk pie chart dashboard.
+    """
+    if supabase is None:
+        raise HTTPException(status_code=503, detail='Database not configured')
+    if clf is None or label_encoder is None:
+        raise HTTPException(status_code=500, detail='Model not loaded')
+
     try:
-        idx_ret = class_list.index('Retention Offer')
-        proba_all = clf.predict_proba(X)
-    except Exception:
-        proba_all = None
+        print("⏳ Menghitung Churn Composition untuk ALL customers...")
+        
+        # 1. Fetch all customers with pagination (Supabase ~1000 per batch)
+        all_users = []
+        page = 0
+        page_size = 1000
+        max_attempts = 20  # Safety limit untuk prevent infinite loop
+        attempt = 0
+        empty_batches = 0  # Counter untuk batches kosong berturut-turut
 
-    # Count buckets
-    buckets = {'high': 0, 'medium': 0, 'low': 0}
-    for i, label in enumerate(all_labels):
-        churn_proba = float(proba_all[i][idx_ret]) if proba_all is not None else 0.0
-        bucket = compute_churn_bucket(label, churn_proba, all_users[i])
-        buckets[bucket] += 1
+        while attempt < max_attempts:
+            # Gunakan len(all_users) sebagai offset yang akurat (bukan page * page_size)
+            # Karena data mungkin tidak selalu eksak 1000 per batch
+            start_range = len(all_users)
+            end_range = len(all_users) + page_size - 1
+            
+            print(f"   📥 Fetching batch {page + 1} (rows {start_range}-{end_range})...")
+            
+            # JANGAN GUNAKAN .limit() - biarkan Supabase return sesuai range
+            res = supabase.table('customer_profile').select('*').range(start_range, end_range).execute()
+            
+            batch_size = len(res.data) if res.data else 0
+            print(f"   ✅ Got {batch_size} users | Total collected: {len(all_users) + batch_size}")
+            
+            # Tambahkan data ke list JIKA ada
+            if batch_size > 0:
+                all_users.extend(res.data)
+                empty_batches = 0  # Reset counter saat ada data
+            else:
+                empty_batches += 1
+            
+            # Jika dapat 2+ batches kosong berturut-turut, STOP (truly no more data)
+            if empty_batches >= 2:
+                print(f"   🛑 No data in {empty_batches} consecutive batches - pagination complete")
+                break
+            
+            # Selalu lanjut ke batch berikutnya
+            page += 1
+            attempt += 1
+        
+        print(f"   ✅ Pagination complete after {page} batches")
 
-    return buckets
+        if not all_users:
+            return {
+                "total_users": 0,
+                "composition": {"high": {"count": 0, "percentage": 0}, "medium": {"count": 0, "percentage": 0}, "low": {"count": 0, "percentage": 0}},
+                "churn_rate": 0,
+                "revenue_at_risk": 0,
+                "generated_at": datetime.now(timezone.utc).isoformat()
+            }
+
+        print(f"✅ Fetched {len(all_users)} customers")
+
+        # 2. Build features DataFrame
+        df_users = pd.DataFrame(all_users)
+        numeric_features_list = [
+            'avg_data_usage_gb', 'pct_video_usage', 'avg_call_duration', 'sms_freq',
+            'monthly_spend', 'topup_freq', 'travel_score', 'complaint_count'
+        ]
+        
+        X = df_users.copy()
+        
+        # Clean numeric columns
+        for col in numeric_features_list:
+            if col in X.columns:
+                X[col] = X[col].astype(str).str.replace(',', '.')
+                X[col] = pd.to_numeric(X[col], errors='coerce').fillna(0)
+        
+        # Fix negatives
+        if 'avg_call_duration' in X.columns:
+            X['avg_call_duration'] = X['avg_call_duration'].abs()
+        if 'monthly_spend' in X.columns:
+            X['monthly_spend'] = X['monthly_spend'].abs()
+        
+        # Drop ID and target cols
+        for drop_col in ('customer_id', 'target_offer', 'target_encoded'):
+            if drop_col in X.columns:
+                X = X.drop(columns=[drop_col])
+
+        # 3. Predict all users
+        all_preds_idx = clf.predict(X)
+        all_labels = label_encoder.inverse_transform(all_preds_idx)
+
+        # Get churn probabilities
+        class_list = list(label_encoder.classes_)
+        try:
+            idx_ret = class_list.index('Retention Offer')
+            proba_all = clf.predict_proba(X)
+        except Exception:
+            proba_all = None
+
+        # 4. Compute churn risk buckets untuk ALL users menggunakan RULES-BASED logic (sesuai notebook)
+        churn_buckets = {'high': 0, 'medium': 0, 'low': 0}
+        user_churn_data = []
+        
+        for i, label in enumerate(all_labels):
+            bucket = compute_churn_bucket(label, all_users[i], global_averages)
+            churn_buckets[bucket] += 1
+            
+            # Simpan per-user data untuk revenue at risk calculation
+            user_churn_data.append({
+                'customer_id': all_users[i].get('customer_id'),
+                'risk_level': bucket,
+                'monthly_spend': float(all_users[i].get('monthly_spend') or 0)
+            })
+
+        total_users = len(all_users)
+        
+        # 5. Calculate percentages
+        churn_rate_pct = (churn_buckets['high'] / total_users * 100) if total_users > 0 else 0.0
+        medium_pct = (churn_buckets['medium'] / total_users * 100) if total_users > 0 else 0.0
+        low_pct = (churn_buckets['low'] / total_users * 100) if total_users > 0 else 0.0
+
+        # 6. Calculate revenue at risk (HIGH risk users only)
+        revenue_at_risk = sum(
+            item['monthly_spend']
+            for item in user_churn_data 
+            if item['risk_level'] == 'high'
+        )
+
+        print(f"✅ Churn Composition Analysis Results:")
+        print(f"   📊 Total Users Analyzed: {total_users}")
+        print(f"   🔴 High Risk: {churn_buckets['high']} users ({churn_rate_pct:.1f}%)")
+        print(f"   🟡 Medium Risk: {churn_buckets['medium']} users ({medium_pct:.1f}%)")
+        print(f"   🟢 Low Risk: {churn_buckets['low']} users ({low_pct:.1f}%)")
+        print(f"   💰 Revenue at Risk: Rp {revenue_at_risk:,.0f}")
+
+        return {
+            'total_users': total_users,
+            'composition': {
+                'high': {
+                    'count': int(churn_buckets['high']),
+                    'percentage': round(churn_rate_pct, 1)
+                },
+                'medium': {
+                    'count': int(churn_buckets['medium']),
+                    'percentage': round(medium_pct, 1)
+                },
+                'low': {
+                    'count': int(churn_buckets['low']),
+                    'percentage': round(low_pct, 1)
+                }
+            },
+            'churn_rate': round(churn_rate_pct, 1),
+            'revenue_at_risk': round(revenue_at_risk, 0),
+            'generated_at': datetime.now(timezone.utc).isoformat()
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error calculating churn composition: {e}")
+        raise HTTPException(status_code=500, detail=f'Error calculating churn composition: {str(e)}')
 
 
 @app.get("/health")

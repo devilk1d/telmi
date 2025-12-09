@@ -56,38 +56,53 @@ const ProductLab = () => {
       return
     }
 
+    // Price validation (harus angka positif)
+    const price = parseFloat(formData.price)
+    if (isNaN(price) || price <= 0) {
+      alert('Harga harus berupa angka positif')
+      return
+    }
+
     setSimulating(true)
     try {
-      // Call ML-based backend simulation
+      console.log('Sending simulation request to backend...', formData)
+      
+      // Call ML-based backend simulation (menggunakan global analytics)
+      // Backend akan fetch semua 10k user dan check kategori match + budget
       const backendResult = await simulateProductImpact(formData)
       
-      // Transform segments to targetUsers format
-      const targetUsers = Object.entries(backendResult.segments || {})
-        .map(([segment, count]) => ({
-          segment,
-          count,
-          percentage: (count / backendResult.hits * 100).toFixed(1)
-        }))
-        .sort((a, b) => b.count - a.count)
+      console.log('Backend response:', backendResult)
+      
+      // Transform segments to targetUsers format (grouping by target_offer label)
+      const targetUsers = backendResult.segments && Object.keys(backendResult.segments).length > 0
+        ? Object.entries(backendResult.segments)
+            .map(([segment, count]) => ({
+              segment,
+              count,
+              percentage: backendResult.hits > 0 ? ((count / backendResult.hits) * 100).toFixed(1) : '0'
+            }))
+            .sort((a, b) => b.count - a.count)
+        : []
 
-      // Calculate match score from conversion rate
-      const matchScore = Math.min(backendResult.conversion_rate * 4, 100) // Scale to 0-100
+      // Calculate match score dari conversion rate (0-100)
+      const matchScore = Math.min(backendResult.conversion_rate * 4, 100)
       
       const result = {
         hits: backendResult.hits,
         revenue: backendResult.revenue,
         matchScore: matchScore.toFixed(1),
         conversionRate: backendResult.conversion_rate.toFixed(2),
-        priceSegment: formData.price < 100000 ? 'Budget Friendly' : formData.price < 200000 ? 'Mid Range' : 'Premium',
-        targetUsers,
-        recommendation: backendResult.recommendation
+        priceSegment: price < 100000 ? 'Budget Friendly' : price < 200000 ? 'Mid Range' : 'Premium',
+        targetUsers: targetUsers.length > 0 ? targetUsers : [],
+        recommendation: backendResult.recommendation,
+        totalAnalyzed: backendResult.total_users || 0
       }
 
       setSimulationResult(result)
       setSaved(false)
     } catch (error) {
       console.error('Simulation error:', error)
-      alert('Gagal melakukan simulasi. Pastikan backend service berjalan.')
+      alert('Gagal melakukan simulasi. Pastikan backend service berjalan di http://localhost:8000')
     } finally {
       setSimulating(false)
     }
@@ -198,7 +213,7 @@ const ProductLab = () => {
                 <option value="Combo">Combo</option>
                 <option value="VOD">VOD</option>
                 <option value="Roaming">Roaming</option>
-                <option value="Device Bundle">Device Bundle</option>
+                <option value="DeviceBundle">Device Bundle</option>
                 <option value="Voice">Voice</option>
               </select>
             </div>
@@ -320,7 +335,12 @@ const ProductLab = () => {
       {/* Results Section */}
       {simulationResult && (
         <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-6 shadow-lg animate-fade-in-up">
-          <h2 className="mb-6 text-2xl font-bold text-white tracking-tight">Hasil Simulasi</h2>
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-white tracking-tight">Hasil Simulasi</h2>
+            <p className="mt-2 text-sm text-slate-400">
+              Dianalisis dari <span className="font-semibold text-cyan-400">{simulationResult.totalAnalyzed?.toLocaleString() || 'semua'}</span> pelanggan total
+            </p>
+          </div>
 
           {/* Results Grid */}
           <div className="grid gap-6 md:grid-cols-4 mb-8">
@@ -353,7 +373,7 @@ const ProductLab = () => {
                   <div key={idx}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-slate-300">{target.segment}</span>
-                      <span className="text-sm font-bold text-white">{target.count} users ({target.percentage}%)</span>
+                      <span className="text-sm font-bold text-white">{target.count.toLocaleString()} users ({target.percentage}%)</span>
                     </div>
                     <div className="h-3 w-full rounded-full bg-slate-800">
                       <div
@@ -364,7 +384,16 @@ const ProductLab = () => {
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-slate-400">Tidak ada segmen yang cocok dengan produk ini</p>
+                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
+                  <p className="text-sm text-amber-200">
+                    <strong>Tidak ada user yang cocok.</strong> Kemungkinan penyebab:
+                  </p>
+                  <ul className="mt-2 space-y-1 text-sm text-amber-100">
+                    <li>• Harga produk ({simulationResult.priceSegment}) terlalu mahal untuk kategori '<strong>{formData.category}</strong>'</li>
+                    <li>• Tidak ada user dengan kategori prediksi yang sesuai dengan kategori produk</li>
+                    <li>• Pertimbangkan menurunkan harga atau memilih kategori lain</li>
+                  </ul>
+                </div>
               )}
             </div>
           </div>
