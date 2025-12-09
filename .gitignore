@@ -37,6 +37,8 @@ Thumbs.db
 
 /.venv/
 
+# Python cache
+__pycache__/
 
 
 

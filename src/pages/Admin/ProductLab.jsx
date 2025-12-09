@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Play, Zap, Lightbulb, TrendingUp, Save, Check, Calendar, Clock, Trash2 } from 'lucide-react'
-import { saveProductSimulation, getProductSimulations, deleteProductSimulation } from '../../services/api'
+import { saveProductSimulation, getProductSimulations, deleteProductSimulation, simulateProductImpact } from '../../services/api'
 import ConfirmDialog from '../../components/ConfirmDialog'
 
 const ProductLab = () => {
@@ -50,44 +50,47 @@ const ProductLab = () => {
   }
 
   const handleSimulate = async () => {
-    setSimulating(true)
-    await new Promise(resolve => setTimeout(resolve, 2000))
-
-    let score = 50
-    if (formData.dataCapacity > 50) score += 20
-    else if (formData.dataCapacity > 20) score += 15
-    else if (formData.dataCapacity > 0) score += 10
-
-    if (formData.price < 50000) score += 15
-    else if (formData.price < 100000) score += 10
-    else if (formData.price < 200000) score += 5
-
-    if (formData.vodCapacity > 0) score += 10
-    if (formData.minutes > 500) score += 5
-
-    const matchScore = Math.min(score, 95)
-    const estimatedRecommendations = Math.floor((matchScore / 100) * 750)
-    const conversionRate = Math.floor(matchScore * 0.8)
-
-    const result = {
-      matchScore,
-      estimatedRecommendations,
-      conversionRate,
-      priceSegment: formData.price < 100000 ? 'Budget Friendly' : formData.price < 200000 ? 'Mid Range' : 'Premium',
-      targetUsers: [
-        { segment: 'Heavy Data Users', percentage: 35 },
-        { segment: 'Price Sensitive', percentage: 25 },
-        { segment: 'Entertainment Seekers', percentage: 20 },
-        { segment: 'Business Users', percentage: 20 }
-      ],
-      recommendation: matchScore > 80
-        ? 'Produk ini memiliki potensi tinggi di pasar. Kami merekomendasikan untuk melanjutkan ke tahap produksi.'
-        : 'Produk ini memiliki potensi sedang di pasar. Pertimbangkan untuk menyesuaikan harga atau menambah fitur.'
+    // Validation
+    if (!formData.productName || !formData.category || !formData.price) {
+      alert('Mohon lengkapi Nama Produk, Kategori, dan Harga')
+      return
     }
 
-    setSimulationResult(result)
-    setSimulating(false)
-    setSaved(false) // Reset saved state when new simulation runs
+    setSimulating(true)
+    try {
+      // Call ML-based backend simulation
+      const backendResult = await simulateProductImpact(formData)
+      
+      // Transform segments to targetUsers format
+      const targetUsers = Object.entries(backendResult.segments || {})
+        .map(([segment, count]) => ({
+          segment,
+          count,
+          percentage: (count / backendResult.hits * 100).toFixed(1)
+        }))
+        .sort((a, b) => b.count - a.count)
+
+      // Calculate match score from conversion rate
+      const matchScore = Math.min(backendResult.conversion_rate * 4, 100) // Scale to 0-100
+      
+      const result = {
+        hits: backendResult.hits,
+        revenue: backendResult.revenue,
+        matchScore: matchScore.toFixed(1),
+        conversionRate: backendResult.conversion_rate.toFixed(2),
+        priceSegment: formData.price < 100000 ? 'Budget Friendly' : formData.price < 200000 ? 'Mid Range' : 'Premium',
+        targetUsers,
+        recommendation: backendResult.recommendation
+      }
+
+      setSimulationResult(result)
+      setSaved(false)
+    } catch (error) {
+      console.error('Simulation error:', error)
+      alert('Gagal melakukan simulasi. Pastikan backend service berjalan.')
+    } finally {
+      setSimulating(false)
+    }
   }
 
   const handleSaveSimulation = async () => {
@@ -323,9 +326,9 @@ const ProductLab = () => {
           <div className="grid gap-6 md:grid-cols-4 mb-8">
             {[
               { label: 'Match Score', value: `${simulationResult.matchScore}%`, icon: TrendingUp, color: 'from-cyan-500 to-blue-600' },
-              { label: 'Estimasi Pengguna', value: simulationResult.estimatedRecommendations, sublabel: 'dari 750', color: 'from-emerald-500 to-green-600' },
-              { label: 'Conversion Rate', value: `${simulationResult.conversionRate}%`, sublabel: 'prediksi', color: 'from-purple-500 to-pink-600' },
-              { label: 'Price Segment', value: simulationResult.priceSegment, sublabel: 'posisi pasar', color: 'from-amber-500 to-orange-600' }
+              { label: 'Target Users', value: simulationResult.hits, sublabel: 'matched customers', color: 'from-emerald-500 to-green-600' },
+              { label: 'Conversion Rate', value: `${simulationResult.conversionRate}%`, sublabel: 'dari total customer', color: 'from-purple-500 to-pink-600' },
+              { label: 'Revenue Potensial', value: `Rp ${(simulationResult.revenue / 1000000).toFixed(1)}jt`, sublabel: 'estimasi', color: 'from-amber-500 to-orange-600' }
             ].map((item, idx) => (
               <div key={idx} className="rounded-xl border border-slate-800 bg-slate-800/50 p-4 hover:bg-slate-800 transition-all">
                 <div className="flex items-start justify-between">
@@ -343,22 +346,26 @@ const ProductLab = () => {
 
           {/* Target Segments */}
           <div className="mb-8">
-            <h3 className="mb-4 font-bold text-white">Target User Segments</h3>
+            <h3 className="mb-4 font-bold text-white">Target User Segments (ML Prediction)</h3>
             <div className="space-y-3">
-              {simulationResult.targetUsers.map((target, idx) => (
-                <div key={idx}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-slate-300">{target.segment}</span>
-                    <span className="text-sm font-bold text-white">{target.percentage}%</span>
+              {simulationResult.targetUsers && simulationResult.targetUsers.length > 0 ? (
+                simulationResult.targetUsers.map((target, idx) => (
+                  <div key={idx}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-slate-300">{target.segment}</span>
+                      <span className="text-sm font-bold text-white">{target.count} users ({target.percentage}%)</span>
+                    </div>
+                    <div className="h-3 w-full rounded-full bg-slate-800">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-purple-500"
+                        style={{ width: `${target.percentage}%` }}
+                      ></div>
+                    </div>
                   </div>
-                  <div className="h-3 w-full rounded-full bg-slate-800">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-purple-500"
-                      style={{ width: `${target.percentage}%` }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-sm text-slate-400">Tidak ada segmen yang cocok dengan produk ini</p>
+              )}
             </div>
           </div>
 

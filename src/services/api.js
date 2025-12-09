@@ -120,24 +120,66 @@ export const getCustomers = async (filters = {}) => {
   try {
     if (!isSupabaseConfigured) return []
 
-    // Gunakan customer_profile dengan limit 1000
-    let query = supabase
-      .from('customer_profile')
-      .select('*')
-      .limit(1000)
-    
-    let { data, error } = await query
-    
-    if (error) {
-      // Fallback ke tabel customers jika customer_profile tidak ada
-      query = supabase.from('customers').select('*').limit(1000)
-      const result = await query
-      data = result.data
-      error = result.error
+    // Fetch all customers using pagination (no limit)
+    let allCustomers = []
+    let page = 0
+    const pageSize = 1000
+    let hasMore = true
+    let tableName = 'customer_profile'
+
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('*')
+        .order('customer_id', { ascending: true })
+        .range(page * pageSize, (page + 1) * pageSize - 1)
+
+      if (error) {
+        // Try fallback to 'customers' table only on first page
+        if (page === 0) {
+          tableName = 'customers'
+          const fallbackResult = await supabase
+            .from(tableName)
+            .select('*')
+            .order('customer_id', { ascending: true })
+            .range(0, pageSize - 1)
+          
+          if (fallbackResult.error) {
+            console.error('Error fetching customers:', fallbackResult.error)
+            return []
+          }
+          
+          if (fallbackResult.data && fallbackResult.data.length > 0) {
+            allCustomers = [...allCustomers, ...fallbackResult.data]
+            page++
+            if (fallbackResult.data.length < pageSize) {
+              hasMore = false
+            }
+          } else {
+            hasMore = false
+          }
+        } else {
+          console.error('Error fetching customers:', error)
+          hasMore = false
+        }
+      } else {
+        if (data && data.length > 0) {
+          allCustomers = [...allCustomers, ...data]
+          page++
+          // If we got less than pageSize, we've reached the end
+          if (data.length < pageSize) {
+            hasMore = false
+          }
+        } else {
+          hasMore = false
+        }
+      }
     }
 
-    if (error) {
-      console.error('Error fetching customers:', error)
+    let data = allCustomers
+
+    if (!data || data.length === 0) {
+      console.log('No customers found')
       return []
     }
 
@@ -371,6 +413,39 @@ export const getCustomerInsights = async (customerId, topN = 5) => {
   } catch (error) {
     console.error('Error fetching customer insights, using fallback:', error)
     return fallback
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+// Simulate Product Impact using ML Model
+export const simulateProductImpact = async (productData) => {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 15000) // 15s timeout for simulation
+
+  try {
+    const res = await fetch(`${RECSYS_BASE_URL}/infer/simulate-product`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        product_name: productData.productName,
+        category: productData.category,
+        price: parseFloat(productData.price),
+        duration_days: parseInt(productData.duration) || 30
+      }),
+      signal: controller.signal,
+    })
+    clearTimeout(timeout)
+    
+    if (!res.ok) {
+      throw new Error(`Simulation failed: ${res.statusText}`)
+    }
+    
+    const data = await res.json()
+    return data
+  } catch (error) {
+    console.error('Error simulating product:', error)
+    throw error
   } finally {
     clearTimeout(timeout)
   }

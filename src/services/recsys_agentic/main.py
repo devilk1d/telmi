@@ -3,6 +3,9 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from typing import List, Literal, Optional, Dict, Any
+from functools import lru_cache
+import time
+import requests
 
 import joblib
 import numpy as np
@@ -14,7 +17,6 @@ from datetime import datetime, timezone
 
 from supabase import create_client, Client
 from dotenv import load_dotenv
-import google.generativeai as genai
 
 # ---------- Config ----------
 APP_DIR = Path(__file__).resolve().parent  # src/services/recsys_agentic
@@ -37,6 +39,9 @@ MODEL_DIR = SERVICES_DIR / "model"
 VITE_SUPABASE_URL = os.getenv("VITE_SUPABASE_URL") or os.getenv("NEXT_PUBLIC_SUPABASE_URL", "")
 VITE_SUPABASE_ANON_KEY = os.getenv("VITE_SUPABASE_ANON_KEY") or os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "")  # Set to empty = disable AI insights
+OLLAMA_API_KEY = os.getenv("OLLAMA_API_KEY", "")  # Optional for cloud/auth endpoints
 
 TOP_N_DEFAULT = 5
 
@@ -54,6 +59,12 @@ app.add_middleware(
 class AnalyticRequest(BaseModel):
     customer_id: str
     top_n: Optional[int] = TOP_N_DEFAULT
+
+class ProductSimulationRequest(BaseModel):
+    product_name: str
+    category: str
+    price: float
+    duration_days: Optional[int] = 30
 
 class RecommendationItem(BaseModel):
     product_id: Optional[str] = None
@@ -75,9 +86,17 @@ class AnalyticResponse(BaseModel):
     generated_at: str
     ai_insights: Optional[Dict[str, str]] = None
 
+class ProductSimulationResponse(BaseModel):
+    hits: int
+    revenue: float
+    conversion_rate: float
+    segments: Dict[str, int]
+    recommendation: str
+    generated_at: str
+
 # ---------- Load artifacts ----------
-clf = None
-label_encoder = None
+gemini_last_call_time = 0  # Track last API call to rate limit
+gemini_call_interval = 2  # Minimum seconds between calls
 global_averages: Dict[str, float] | None = None
 
 TARGET_TO_CATEGORY_MAP = {
@@ -107,21 +126,55 @@ VOD_THRESHOLD = 0.4
 SMS_THRESHOLD = 15.0
 
 supabase: Optional[Client] = None
-model_llm = None
+gemini_last_call_time = 0  # Track last API call to rate limit
+gemini_call_interval = 2  # Minimum seconds between calls
+gemini_last_call_time = 0  # Track last API call to rate limit
+gemini_call_interval = 2  # Minimum seconds between calls
 
 
-def call_gemini_safe(prompt: str) -> str:
-    """Wrapper aman untuk memanggil Gemini dengan Error Handling"""
+def call_ollama_safe(prompt: str) -> str:
+    """Call Ollama local API with basic rate limiting and graceful fallbacks."""
+    global gemini_last_call_time
+
+    if not OLLAMA_MODEL:
+        return "AI insights tidak tersedia (OLLAMA_MODEL tidak diset)."
+
     try:
-        if model_llm is None:
-            return "AI insights tidak tersedia (Gemini API tidak terkonfigurasi)."
-        response = model_llm.generate_content(prompt)
-        if response.text:
-            return response.text
-        else:
-            return "AI tidak memberikan respons teks."
+        # Rate limiting: minimum interval between calls
+        current_time = time.time()
+        time_since_last_call = current_time - gemini_last_call_time
+        if time_since_last_call < gemini_call_interval:
+            wait_time = gemini_call_interval - time_since_last_call
+            print(f"⏳ Rate limiting: waiting {wait_time:.1f}s before next Ollama call")
+            time.sleep(wait_time)
+
+        gemini_last_call_time = time.time()
+
+        # Prepare headers (include API key if available for cloud/auth endpoints)
+        headers = {"Content-Type": "application/json"}
+        if OLLAMA_API_KEY:
+            headers["Authorization"] = f"Bearer {OLLAMA_API_KEY}"
+
+        resp = requests.post(
+            f"{OLLAMA_BASE_URL}/api/generate",
+            json={
+                "model": OLLAMA_MODEL,
+                "prompt": prompt,
+                "stream": False,
+            },
+            headers=headers,
+            timeout=60,
+        )
+
+        if resp.status_code != 200:
+            return f"AI tidak tersedia (status {resp.status_code})"
+
+        data = resp.json()
+        text = data.get("response") or data.get("output") or ""
+        return text if text else "AI tidak memberikan respons teks."
     except Exception as e:
-        return f"Gagal memuat analisis AI: {str(e)}"
+        error_msg = str(e)
+        return f"AI tidak tersedia: {error_msg[:120]}"
 
 
 def gemini_user_product_insight(pred_label: str, user_profile: Dict[str, Any], recommendations: List[RecommendationItem]) -> str:
@@ -154,7 +207,7 @@ Buatkan deskripsi singkat (maksimal 3 kalimat) yang menjelaskan:
 
 Gunakan bahasa yang profesional namun mudah dipahami.
 """
-    return call_gemini_safe(prompt)
+    return call_ollama_safe(prompt)
 
 
 def gemini_churn_analysis(churn_proba: float, user_profile: Dict[str, Any], pred_label: str) -> str:
@@ -182,11 +235,11 @@ Buatkan analisis singkat (maksimal 3 kalimat) yang menjelaskan:
 
 Gunakan bahasa yang profesional dan actionable.
 """
-    return call_gemini_safe(prompt)
+    return call_ollama_safe(prompt)
 
 
 def load_artifacts() -> None:
-    global clf, label_encoder, global_averages, supabase, model_llm
+    global clf, label_encoder, global_averages, supabase
     model_path = MODEL_DIR / "model_dokter_rf.pkl"
     le_path = MODEL_DIR / "label_encoder.pkl"
     ga_path = MODEL_DIR / "global_averages.pkl"
@@ -207,18 +260,11 @@ def load_artifacts() -> None:
         print("   Set these in .env.local file or as environment variables")
         supabase = None
     
-    # Initialize Gemini AI
-    if GEMINI_API_KEY:
-        try:
-            genai.configure(api_key=GEMINI_API_KEY)
-            # Use gemini-pro (stable and widely available)
-            model_llm = genai.GenerativeModel('gemini-2.0-flash-lite')
-            print("✅ Gemini AI initialized successfully (gemini-2.0-flash-lite)")
-        except Exception as e:
-            print(f"⚠️ Gemini AI initialization failed: {e}")
-            model_llm = None
+    # Initialize Ollama (no client object needed; we call HTTP endpoint directly)
+    if OLLAMA_MODEL:
+        print(f"✅ Ollama client configured (model: {OLLAMA_MODEL}, base: {OLLAMA_BASE_URL})")
     else:
-        print("⚠️ GEMINI_API_KEY not set - AI insights will be disabled")
+        print("⚠️ OLLAMA_MODEL not set - AI insights will be disabled")
 
 
 def abs_if_needed(df: pd.DataFrame, col: str) -> None:
@@ -283,168 +329,232 @@ def fetch_products() -> pd.DataFrame:
     return df
 
 
-def compute_churn(proba: float) -> str:
-    if proba < 0.20:
-        return 'low'
-    if proba < 0.50:
+def compute_churn_bucket(pred_label: str, proba: float, user_row: Dict[str, Any]) -> str:
+    """Rule-based churn bucket inspired by notebook logic."""
+    # Thresholds from global averages with fallbacks
+    avg_data = float(global_averages.get('avg_data_usage_gb', 0)) if global_averages else 0
+    avg_call = float(global_averages.get('avg_call_duration', 0)) if global_averages else 0
+    avg_sms = float(global_averages.get('sms_freq', 0)) if global_averages else 0
+    avg_topup = float(global_averages.get('topup_freq', 0)) if global_averages else 0
+
+    usage_data = float(user_row.get('avg_data_usage_gb') or 0)
+    usage_call = float(user_row.get('avg_call_duration') or 0)
+    usage_sms = float(user_row.get('sms_freq') or 0)
+    usage_topup = float(user_row.get('topup_freq') or 0)
+    complaints = float(user_row.get('complaint_count') or 0)
+
+    below_data = usage_data < avg_data
+    below_call = usage_call < avg_call
+    below_sms = usage_sms < avg_sms
+    below_topup = usage_topup < avg_topup
+    num_below_usage = sum([below_data, below_call, below_sms])
+
+    aboveeq_data = usage_data >= avg_data
+    aboveeq_call = usage_call >= avg_call
+    aboveeq_sms = usage_sms >= avg_sms
+    num_above_usage = sum([aboveeq_data, aboveeq_call, aboveeq_sms])
+
+    # HIGH: model says Retention Offer or proba high
+    if pred_label == 'Retention Offer' or proba >= 0.50:
+        return 'high'
+
+    # MEDIUM: complaints + usage mostly below avg + low topup
+    if complaints > 0 and num_below_usage >= 2 and below_topup:
         return 'medium'
-    return 'high'
+
+    # LOW default
+    return 'low'
 
 
-def recommend_products(pred_label: str, user_df: pd.DataFrame, products_df: pd.DataFrame, total_recommendations: int) -> List[RecommendationItem]:
+def recommend_products(pred_label: str, user_row: Dict[str, Any], products_df: pd.DataFrame, total_recommendations: int) -> List[RecommendationItem]:
+    """Notebook-inspired recommendation v16 (max wallet share, filler murah)."""
     recs: List[RecommendationItem] = []
     seen = set()
 
-    budget = float(user_df['monthly_spend'].iloc[0]) if 'monthly_spend' in user_df.columns else 0.0
-    budget_multiplier = 1.5  # Allow up to 150% of budget for flexibility
+    budget = float(user_row.get('monthly_spend') or 0.0)
     primary_category = TARGET_TO_CATEGORY_MAP.get(pred_label)
 
-    # FASE 1: Primary Recommendations (target 3 produk)
-    if primary_category:
-        sort_col, sort_asc, desc = CATEGORY_SORTING_LOGIC.get(primary_category, ('price', True, 'Rekomendasi Utama:'))
-        
-        # Try with strict filters first (30 days, within budget)
-        filtered = products_df[
-            (products_df['category'] == primary_category) & (products_df['duration_days'] == 30)
-        ].copy()
-        if primary_category not in ['DeviceBundle', 'Retention Offer']:
-            filtered = filtered[filtered['price'] <= budget * budget_multiplier]
-        
-        # Fallback 1: Relax duration constraint if not enough products
-        if len(filtered) < 3:
-            filtered = products_df[
-                (products_df['category'] == primary_category)
-            ].copy()
-            if primary_category not in ['DeviceBundle', 'Retention Offer']:
-                filtered = filtered[filtered['price'] <= budget * budget_multiplier]
-        
-        # Fallback 2: Remove budget constraint if still not enough
-        if len(filtered) < 3:
-            filtered = products_df[
-                (products_df['category'] == primary_category)
-            ].copy()
-        
-        top_primary = filtered.sort_values(by=sort_col, ascending=sort_asc).head(3)
-        for _, row in top_primary.iterrows():
+    def add_items(df: pd.DataFrame, desc: str, take: int) -> None:
+        nonlocal recs, seen
+        for _, row in df.head(take).iterrows():
             recs.append(RecommendationItem(
                 product_id=str(row.get('product_id') or ''),
-                product_name=str(row['product_name']),
-                category=str(row['category']),
-                price=float(row['price']),
-                duration_days=int(row['duration_days']),
+                product_name=str(row.get('product_name') or ''),
+                category=str(row.get('category') or ''),
+                price=float(row.get('price') or 0),
+                duration_days=int(row.get('duration_days') or 30),
                 reasons=[desc, f"Sesuai prediksi model: {pred_label}"]
             ))
-            seen.add(row['product_name'])
+            seen.add(row.get('product_name'))
+
+    # Primary
+    if primary_category:
+        base = products_df[products_df['category'] == primary_category].copy()
+
+        if primary_category == 'Retention Offer':
+            top = base[base['price'] <= budget * 0.8].sort_values('price', ascending=True)
+            if top.empty:
+                top = base.sort_values('price', ascending=True)
+            add_items(top, "Rekomendasi Utama (Retensi Hemat):", 3)
+
+        elif primary_category == 'DeviceBundle':
+            top = base[base['price'] <= budget].sort_values('price', ascending=False)
+            if top.empty:
+                top = base.sort_values('price', ascending=True)
+            add_items(top, "Rekomendasi Utama (Upgrade Gadget):", 3)
+
+        else:
+            budget_ok = base[base['price'] <= budget].sort_values('price', ascending=False)
+            top = budget_ok if not budget_ok.empty else base.sort_values('price', ascending=True)
+            add_items(top, f"Rekomendasi Utama ({primary_category} - Premium):", 3)
 
     remaining = total_recommendations - len(recs)
 
-    # FASE 2: Secondary Recommendations based on usage profile
+    # Secondary cross-sell murah + durasi pendek
     if remaining > 0 and global_averages is not None:
-        data_usage = float(user_df.get('avg_data_usage_gb', pd.Series([0])).iloc[0])
-        call_usage = float(user_df.get('avg_call_duration', pd.Series([0])).iloc[0])
-        vod_usage = float(user_df.get('pct_video_usage', pd.Series([0])).iloc[0])
-        sms_usage = float(user_df.get('sms_freq', pd.Series([0])).iloc[0])
-        
-        # Calculate usage scores
         scores = [
-            ('Data', data_usage / (global_averages['avg_data_usage_gb'] + 1e-6), 'price_per_gb', True),
-            ('Voice', call_usage / (global_averages['avg_call_duration'] + 1e-6), 'price_per_minute', True),
-            ('VOD', vod_usage / (global_averages['pct_video_usage'] + 1e-6), 'price', True),
-            ('SMS', sms_usage / (global_averages['sms_freq'] + 1e-6), 'price_per_sms', True),
-            ('Combo', 1.0, 'price', True),  # Always include Combo as option
-            ('Roaming', 0.8, 'price', True),  # Include Roaming as general option
+            ('Data', float(user_row.get('avg_data_usage_gb') or 0) / (global_averages['avg_data_usage_gb'] + 1e-6)),
+            ('Voice', float(user_row.get('avg_call_duration') or 0) / (global_averages['avg_call_duration'] + 1e-6)),
+            ('VOD', float(user_row.get('pct_video_usage') or 0) / (global_averages['pct_video_usage'] + 1e-6)),
+            ('SMS', float(user_row.get('sms_freq') or 0) / (global_averages['sms_freq'] + 1e-6)),
         ]
-        
-        # Sort by usage score (prioritize high usage categories)
-        sorted_scores = sorted([s for s in scores if s[1] > 0.5], key=lambda x: x[1], reverse=True)
-        
-        for cat, score, sort_col, sort_asc in sorted_scores:
+        sorted_scores = sorted([s for s in scores if s[1] > 1.0], key=lambda x: x[1], reverse=True)
+        if not sorted_scores and primary_category != 'Combo':
+            sorted_scores.append(('Combo', 1.0))
+
+        for cat, _ in sorted_scores:
             if remaining <= 0:
                 break
-            
-            # Skip if same as primary category
             if primary_category and cat == primary_category:
                 continue
-            
-            # Try multiple strategies to find products
-            filtered_sec = None
-            reason_suffix = ""
-            
-            # Strategy 1: Short duration (7-15 days), within budget
-            filtered_sec = products_df[
+
+            filtered = products_df[
                 (products_df['category'] == cat) &
-                (products_df['duration_days'] >= 7) & (products_df['duration_days'] <= 15) &
-                (products_df['price'] <= budget * budget_multiplier) &
+                (products_df['price'] <= budget * 0.5) &
                 (~products_df['product_name'].isin(seen))
             ].copy()
-            reason_suffix = "Paket pendek sesuai profil"
-            
-            # Strategy 2: Standard 30 days, within budget
-            if filtered_sec.empty:
-                filtered_sec = products_df[
-                    (products_df['category'] == cat) &
-                    (products_df['duration_days'] == 30) &
-                    (products_df['price'] <= budget * budget_multiplier) &
-                    (~products_df['product_name'].isin(seen))
-                ].copy()
-                reason_suffix = "Paket bulanan sesuai profil"
-            
-            # Strategy 3: Any duration, within extended budget
-            if filtered_sec.empty:
-                filtered_sec = products_df[
-                    (products_df['category'] == cat) &
-                    (products_df['price'] <= budget * 2.0) &
-                    (~products_df['product_name'].isin(seen))
-                ].copy()
-                reason_suffix = "Rekomendasi alternatif"
-            
-            # Strategy 4: Any product from this category (no budget filter)
-            if filtered_sec.empty:
-                filtered_sec = products_df[
-                    (products_df['category'] == cat) &
-                    (~products_df['product_name'].isin(seen))
-                ].copy()
-                reason_suffix = "Produk populer kategori ini"
-            
-            if not filtered_sec.empty:
-                take = min(1, remaining)  # Take 1 per category for diversity
-                top_sec = filtered_sec.sort_values(by=sort_col, ascending=sort_asc).head(take)
-                
-                for _, row in top_sec.iterrows():
-                    recs.append(RecommendationItem(
-                        product_id=str(row.get('product_id') or ''),
-                        product_name=str(row['product_name']),
-                        category=str(row['category']),
-                        price=float(row['price']),
-                        duration_days=int(row['duration_days']),
-                        reasons=[f"Rekomendasi Sekunder: {cat}", reason_suffix]
-                    ))
-                    seen.add(row['product_name'])
-                    remaining -= 1
+            filtered['is_short'] = filtered['duration_days'].apply(lambda x: 1 if x <= 7 else 2)
+            top_sec = filtered.sort_values(by=['is_short', 'price'], ascending=[True, True])
 
-    # FASE 3: Fallback - Fill remaining slots with any available products
+            if not top_sec.empty:
+                add_items(top_sec, f"Rekomendasi Sekunder ({cat})", 1)
+                remaining = total_recommendations - len(recs)
+
+    # Fallback fillers
     if len(recs) < total_recommendations:
         remaining = total_recommendations - len(recs)
-        fallback_products = products_df[
-            ~products_df['product_name'].isin(seen)
-        ].copy()
-        
-        # Sort by popularity (price ascending for best value)
-        fallback_products = fallback_products.sort_values(by='price', ascending=True).head(remaining)
-        
-        for _, row in fallback_products.iterrows():
+        fillers = products_df[(~products_df['product_name'].isin(seen)) & (products_df['price'] <= budget * 0.5)]
+        fillers = fillers.sort_values('price', ascending=True)
+        for _, row in fillers.head(remaining).iterrows():
             recs.append(RecommendationItem(
                 product_id=str(row.get('product_id') or ''),
-                product_name=str(row['product_name']),
-                category=str(row['category']),
-                price=float(row['price']),
-                duration_days=int(row['duration_days']),
-                reasons=["Rekomendasi Umum", "Best value produk populer"]
+                product_name=str(row.get('product_name') or ''),
+                category=str(row.get('category') or ''),
+                price=float(row.get('price') or 0),
+                duration_days=int(row.get('duration_days') or 30),
+                reasons=[f"{row.get('category')}", "Filler value"]
             ))
             if len(recs) >= total_recommendations:
                 break
 
     return recs[:total_recommendations]
+
+
+def simulate_product_impact(new_product: Dict[str, Any]) -> Dict[str, Any]:
+    """Simulate product impact across all customers (notebook logic)."""
+    if supabase is None:
+        raise HTTPException(status_code=503, detail='Database not configured')
+    if clf is None or label_encoder is None:
+        raise HTTPException(status_code=500, detail='Model not loaded')
+
+    # Fetch ALL customers using pagination (no limit)
+    all_users = []
+    page = 0
+    page_size = 1000
+    has_more = True
+
+    while has_more:
+        res = supabase.table('customer_profile').select('*').range(page * page_size, (page + 1) * page_size - 1).execute()
+        
+        if res.data and len(res.data) > 0:
+            all_users.extend(res.data)
+            page += 1
+            # If we got less than page_size, we've reached the end
+            if len(res.data) < page_size:
+                has_more = False
+        else:
+            has_more = False
+
+    if not all_users:
+        raise HTTPException(status_code=404, detail='No customers found')
+
+    print(f"✅ Fetched {len(all_users)} customers for simulation")
+
+    # Build features DataFrame properly (batch processing)
+    df_users = pd.DataFrame(all_users)
+    
+    # Prepare features using same logic as prepare_features but for multiple rows
+    numeric_features_list = [
+        'avg_data_usage_gb', 'pct_video_usage', 'avg_call_duration', 'sms_freq',
+        'monthly_spend', 'topup_freq', 'travel_score', 'complaint_count'
+    ]
+    
+    X = df_users.copy()
+    
+    # Replace comma decimal and coerce for numeric columns
+    for col in numeric_features_list:
+        if col in X.columns:
+            X[col] = X[col].astype(str).str.replace(',', '.')
+            X[col] = pd.to_numeric(X[col], errors='coerce').fillna(0)
+    
+    # Apply abs fix for negatives
+    if 'avg_call_duration' in X.columns:
+        X['avg_call_duration'] = X['avg_call_duration'].abs()
+    if 'monthly_spend' in X.columns:
+        X['monthly_spend'] = X['monthly_spend'].abs()
+    
+    # Drop ID and target-like cols
+    for drop_col in ('customer_id', 'target_offer', 'target_encoded'):
+        if drop_col in X.columns:
+            X = X.drop(columns=[drop_col])
+
+
+    # Predict all users
+    all_preds_idx = clf.predict(X)
+    all_labels = label_encoder.inverse_transform(all_preds_idx)
+
+    hits = 0
+    revenue = 0.0
+    segments = {}
+
+    for i, label in enumerate(all_labels):
+        budget = float(all_users[i].get('monthly_spend') or 0)
+        cat = TARGET_TO_CATEGORY_MAP.get(label)
+        
+        if cat == new_product['category']:
+            if new_product['price'] <= budget:
+                hits += 1
+                revenue += new_product['price']
+                segments[label] = segments.get(label, 0) + 1
+
+    total_users = len(all_users)
+    conversion_rate = (hits / total_users * 100) if total_users > 0 else 0
+
+    # Generate recommendation text
+    if conversion_rate > 20:
+        recommendation = f"Produk ini memiliki potensi TINGGI dengan {hits} target user ({conversion_rate:.1f}%). Revenue potensial: Rp {revenue:,.0f}. Sangat direkomendasikan untuk produksi."
+    elif conversion_rate > 10:
+        recommendation = f"Produk ini memiliki potensi SEDANG dengan {hits} target user ({conversion_rate:.1f}%). Revenue potensial: Rp {revenue:,.0f}. Pertimbangkan optimasi harga atau fitur."
+    else:
+        recommendation = f"Produk ini memiliki potensi RENDAH dengan {hits} target user ({conversion_rate:.1f}%). Revenue potensial: Rp {revenue:,.0f}. Perlu evaluasi ulang positioning produk."
+
+    return {
+        'hits': hits,
+        'revenue': revenue,
+        'conversion_rate': conversion_rate,
+        'segments': segments,
+        'recommendation': recommendation
+    }
 
 
 @app.on_event("startup")
@@ -474,24 +584,30 @@ def infer_analytic(payload: AnalyticRequest):
     except Exception:
         churn_proba = 0.0
 
-    churn_label = compute_churn(churn_proba)
+    churn_label = compute_churn_bucket(pred_label, churn_proba, customer_row)
 
     # Products + recommendations
     products_df = fetch_products()
-    items = recommend_products(pred_label, X, products_df, payload.top_n or TOP_N_DEFAULT)
+    items = recommend_products(pred_label, customer_row, products_df, payload.top_n or TOP_N_DEFAULT)
 
     # Generate AI insights if Gemini is available
     ai_insights = None
-    if model_llm is not None:
+    if OLLAMA_MODEL:
         try:
             product_insight = gemini_user_product_insight(pred_label, customer_row, items)
-            churn_insight = gemini_churn_analysis(churn_proba, customer_row, pred_label)
+            # Only call churn analysis if product insight succeeded
+            if "tidak tersedia" not in product_insight.lower() and "quota" not in product_insight.lower():
+                churn_insight = gemini_churn_analysis(churn_proba, customer_row, pred_label)
+            else:
+                churn_insight = product_insight
+            
             ai_insights = {
                 'product_recommendation': product_insight,
                 'churn_analysis': churn_insight
             }
         except Exception as e:
             print(f"Error generating AI insights: {e}")
+            # Don't fail the whole request, just skip AI insights
 
     return AnalyticResponse(
         recommendations={
@@ -502,6 +618,28 @@ def infer_analytic(payload: AnalyticRequest):
         user_category=user_category,
         generated_at=datetime.now(timezone.utc).isoformat(),
         ai_insights=ai_insights,
+    )
+
+
+@app.post("/infer/simulate-product", response_model=ProductSimulationResponse)
+def simulate_product(payload: ProductSimulationRequest):
+    """Simulate product impact across customer base using ML model."""
+    new_product = {
+        'product_name': payload.product_name,
+        'category': payload.category,
+        'price': payload.price,
+        'duration_days': payload.duration_days or 30
+    }
+    
+    result = simulate_product_impact(new_product)
+    
+    return ProductSimulationResponse(
+        hits=result['hits'],
+        revenue=result['revenue'],
+        conversion_rate=result['conversion_rate'],
+        segments=result['segments'],
+        recommendation=result['recommendation'],
+        generated_at=datetime.now(timezone.utc).isoformat()
     )
 
 
