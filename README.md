@@ -63,28 +63,25 @@ Buat file `.env.local` di root project:
 
 ```env
 # Supabase Configuration
+
+# Ollama/LLM Configuration (untuk AI insights)
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your_anon_key_here
+```
+# Backend FastAPI (Railway)
+VITE_RECSYS_URL=https://your-recsys-api-url
 
 # Ollama/LLM Configuration (untuk AI insights)
 OLLAMA_BASE_URL=http://localhost:11434 # gunakan https://ollama.com untuk cloud
 OLLAMA_MODEL=mistral # atau model lain yang tersedia
 OLLAMA_API_KEY=  # Leave empty untuk local, set untuk Ollama Cloud
-```
-
 **Mendapatkan Supabase credentials:**
 1. Login ke [supabase.com](https://supabase.com)
 2. Create new project
 3. Go to **Settings** → **API**
 4. Copy `Project URL` dan `anon (public)` key
-
 ### Step 5: Database Setup
 
-1. Jalankan SQL di `database/migrations/001_create_tables.sql` dan `database/migrations/002_create_product_simulations.sql` pada Supabase.
-2. Pastikan tabel `login`, `customer_profile`, `product_catalog` tersedia.
-3. Import data sampel jika ada.
-
-### Step 6: Download ML Model Artifacts
 
 Model file yang diperlukan harus tersedia di `src/services/model/`:
 - `model_dokter_rf.pkl` - Trained Random Forest model
@@ -599,6 +596,29 @@ OLLAMA_MODEL=mistral
 - Test fitur di dev server sebelum push
 - Update README jika ada fitur/API baru
 - Use meaningful commit messages
+
+---
+
+## 🚀 Cara Deploy & Integrasi Backend FastAPI di Railway
+
+1. **Deploy Backend ke Railway**
+   - https://github.com/devilk1d/telvora-model-service (Push kode backend ke GitHub) 
+   - Buat project baru di Railway, hubungkan ke repository backend Anda.
+   - Railway akan otomatis build dan deploy backend FastAPI.
+
+2. **Generate Public URL**
+   - Setelah deploy, klik tombol "Generate Domain" di dashboard Railway.
+   - Railway akan memberikan public URL (misal: https://your-service.up.railway.app).
+
+3. **Integrasi dengan Frontend**
+   - Copy public URL Railway.
+   - Masukkan ke environment variable frontend (misal: VITE_RECSYS_URL).
+   - Frontend dapat mengakses API backend melalui URL tersebut.
+
+4. **Monitoring & Logs**
+   - Railway menyediakan dashboard untuk melihat status service, logs, dan error.
+
+Ringkasnya: Railway memudahkan deploy backend, generate public URL, dan integrasi dengan frontend tanpa perlu setup server manual.
 
 ---
 
