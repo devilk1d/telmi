@@ -168,45 +168,45 @@ const ProductLab = () => {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in-up">
+    <div className="space-y-8 animate-fade-in-up text-slate-900 dark:text-white">
       {/* Header */}
       <div className="flex items-center gap-4">
         <div className="rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 p-3 text-white shadow-lg shadow-purple-500/30">
           <Zap size={28} />
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Product Lab</h1>
-          <p className="mt-1 text-slate-400">Simulasi AI untuk analisis peluang pasar produk baru</p>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Product Lab</h1>
+          <p className="mt-1 text-slate-700 dark:text-slate-400">Simulasi AI untuk analisis peluang pasar produk baru</p>
         </div>
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
         {/* Form Card */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-6 shadow-lg lg:col-span-2">
-          <h2 className="mb-6 text-xl font-bold text-white tracking-tight">Konfigurasi Produk</h2>
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-6 shadow-lg lg:col-span-2">
+          <h2 className="mb-6 text-xl font-bold text-slate-900 dark:text-white tracking-tight">Konfigurasi Produk</h2>
 
           <div className="space-y-4">
             {/* Product Name */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Nama Produk</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Nama Produk</label>
               <input
                 type="text"
                 name="productName"
                 value={formData.productName}
                 onChange={handleFormChange}
                 placeholder="e.g., Super Gamer 50GB"
-                className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
               />
             </div>
 
             {/* Category */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Kategori</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Kategori</label>
               <select
                 name="category"
                 value={formData.category}
                 onChange={handleFormChange}
-                className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
               >
                 <option value="">Pilih Category</option>
                 <option value="Data">Data</option>
@@ -221,75 +221,75 @@ const ProductLab = () => {
             {/* Price & Duration */}
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Harga (Rp)</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Harga (Rp)</label>
                 <input
                   type="number"
                   name="price"
                   value={formData.price}
                   onChange={handleFormChange}
                   placeholder="50000"
-                  className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Durasi (Hari)</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Durasi (Hari)</label>
                 <input
                   type="number"
                   name="duration"
                   value={formData.duration}
                   onChange={handleFormChange}
                   placeholder="30"
-                  className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                 />
               </div>
             </div>
 
             {/* Detail Kuota */}
-            <div className="rounded-xl border border-slate-800 bg-slate-800/30 p-4">
-              <h3 className="mb-4 font-semibold text-white">Detail Kuota</h3>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30 p-4">
+              <h3 className="mb-4 font-semibold text-slate-900 dark:text-white">Detail Kuota</h3>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Data (GB)</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Data (GB)</label>
                   <input
                     type="number"
                     name="dataCapacity"
                     value={formData.dataCapacity}
                     onChange={handleFormChange}
                     placeholder="0"
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Panggilan (Menit)</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Panggilan (Menit)</label>
                   <input
                     type="number"
                     name="minutes"
                     value={formData.minutes}
                     onChange={handleFormChange}
                     placeholder="0"
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">SMS</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">SMS</label>
                   <input
                     type="number"
                     name="sms"
                     value={formData.sms}
                     onChange={handleFormChange}
                     placeholder="0"
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">VOD (GB)</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">VOD (GB)</label>
                   <input
                     type="number"
                     name="vodCapacity"
                     value={formData.vodCapacity}
                     onChange={handleFormChange}
                     placeholder="0"
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                   />
                 </div>
               </div>
@@ -317,14 +317,14 @@ const ProductLab = () => {
         </div>
 
         {/* Info Card */}
-        <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-6">
+        <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-6 text-slate-900 dark:text-white">
           <div className="mb-4 flex items-start gap-3">
             <Lightbulb className="mt-1 text-cyan-400" size={24} />
             <div>
-              <h3 className="font-bold text-white">Tentang Product Lab</h3>
+              <h3 className="font-bold">Tentang Product Lab</h3>
             </div>
           </div>
-          <p className="text-sm text-slate-300 leading-relaxed">
+          <p className="text-sm text-slate-800 dark:text-slate-300 leading-relaxed">
             Product Lab menggunakan AI untuk menganalisis peluang pasar produk baru Anda. 
             Sistem akan mengevaluasi harga, kategori, dan detail kuota untuk memberikan 
             rekomendasi dan prediksi performa produk di pasar.
@@ -334,7 +334,7 @@ const ProductLab = () => {
 
       {/* Results Section */}
       {simulationResult && (
-        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-6 shadow-lg animate-fade-in-up">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-6 shadow-lg animate-fade-in-up">
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-white tracking-tight">Hasil Simulasi</h2>
             <p className="mt-2 text-sm text-slate-400">
@@ -440,11 +440,11 @@ const ProductLab = () => {
       )}
 
       {/* History Section */}
-      <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-6 shadow-lg animate-fade-in-up">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-6 shadow-lg animate-fade-in-up text-slate-900 dark:text-white">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-white tracking-tight">History Simulasi</h2>
-            <p className="mt-1 text-sm text-slate-400">Riwayat hasil simulasi yang sudah disimpan</p>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">History Simulasi</h2>
+            <p className="mt-1 text-sm text-slate-700 dark:text-slate-400">Riwayat hasil simulasi yang sudah disimpan</p>
           </div>
           <div className="flex items-center gap-3">
             <div className="relative">
@@ -453,13 +453,13 @@ const ProductLab = () => {
                 type="date"
                 value={dateFilter}
                 onChange={(e) => setDateFilter(e.target.value)}
-                className="pl-10 pr-4 py-2 rounded-lg border border-slate-700 bg-slate-800/50 text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                className="pl-10 pr-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
               />
             </div>
             {dateFilter && (
               <button
                 onClick={() => setDateFilter('')}
-                className="px-3 py-2 text-sm text-slate-400 hover:text-white transition"
+                className="px-3 py-2 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition"
               >
                 Reset
               </button>
@@ -470,14 +470,14 @@ const ProductLab = () => {
         {loadingHistory ? (
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
-              <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-700 border-t-cyan-500"></div>
-              <p className="text-slate-400">Memuat history...</p>
+              <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-300 dark:border-slate-700 border-t-cyan-500"></div>
+              <p className="text-slate-600 dark:text-slate-400">Memuat history...</p>
             </div>
           </div>
         ) : filteredSimulations.length === 0 ? (
           <div className="text-center py-12">
-            <Clock className="mx-auto mb-4 text-slate-500" size={48} />
-            <p className="text-slate-400">
+            <Clock className="mx-auto mb-4 text-slate-400" size={48} />
+            <p className="text-slate-600 dark:text-slate-400">
               {dateFilter ? 'Tidak ada simulasi pada tanggal yang dipilih' : 'Belum ada history simulasi'}
             </p>
           </div>
@@ -486,23 +486,23 @@ const ProductLab = () => {
             {filteredSimulations.map((sim) => (
               <div
                 key={sim.id}
-                className="rounded-xl border border-slate-800 bg-slate-800/50 p-5 hover:bg-slate-800 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 animate-fade-in-up"
+                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 p-5 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 animate-fade-in-up"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-bold text-white truncate mb-1">{sim.productName || 'Unnamed Product'}</h3>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white truncate mb-1">{sim.productName || 'Unnamed Product'}</h3>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="inline-block rounded-full bg-purple-500/20 border border-purple-500/30 px-2.5 py-1 text-xs font-semibold text-purple-400">
+                      <span className="inline-block rounded-full bg-purple-500/15 border border-purple-500/30 px-2.5 py-1 text-xs font-semibold text-purple-600 dark:text-purple-300">
                         {sim.category || 'N/A'}
                       </span>
-                      <span className="inline-block rounded-full bg-cyan-500/20 border border-cyan-500/30 px-2.5 py-1 text-xs font-semibold text-cyan-400">
+                      <span className="inline-block rounded-full bg-cyan-500/15 border border-cyan-500/30 px-2.5 py-1 text-xs font-semibold text-cyan-600 dark:text-cyan-300">
                         {sim.priceSegment || 'N/A'}
                       </span>
                     </div>
                   </div>
                   <button
                     onClick={() => handleDeleteClick(sim.id, sim.productName || 'simulasi ini')}
-                    className="ml-2 p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200 flex-shrink-0"
+                    className="ml-2 p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-all duration-200 flex-shrink-0"
                     title="Hapus"
                   >
                     <Trash2 size={16} />
@@ -511,31 +511,31 @@ const ProductLab = () => {
 
                 <div className="space-y-3 mb-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400">Match Score</span>
+                    <span className="text-xs text-slate-600 dark:text-slate-400">Match Score</span>
                     <span className={`text-sm font-bold ${
-                      sim.matchScore >= 80 ? 'text-emerald-400' :
-                      sim.matchScore >= 60 ? 'text-amber-400' :
-                      'text-red-400'
+                      sim.matchScore >= 80 ? 'text-emerald-600 dark:text-emerald-400' :
+                      sim.matchScore >= 60 ? 'text-amber-600 dark:text-amber-400' :
+                      'text-red-600 dark:text-red-400'
                     }`}>
                       {sim.matchScore?.toFixed(1) || 0}%
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400">Estimasi Pengguna</span>
-                    <span className="text-sm font-semibold text-white">{sim.estimatedRecommendations || 0}</span>
+                    <span className="text-xs text-slate-600 dark:text-slate-400">Estimasi Pengguna</span>
+                    <span className="text-sm font-semibold text-slate-900 dark:text-white">{sim.estimatedRecommendations || 0}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400">Conversion Rate</span>
-                    <span className="text-sm font-semibold text-white">{sim.conversionRate?.toFixed(1) || 0}%</span>
+                    <span className="text-xs text-slate-600 dark:text-slate-400">Conversion Rate</span>
+                    <span className="text-sm font-semibold text-slate-900 dark:text-white">{sim.conversionRate?.toFixed(1) || 0}%</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400">Harga</span>
-                    <span className="text-sm font-semibold text-white">Rp {(sim.price || 0).toLocaleString('id-ID')}</span>
+                    <span className="text-xs text-slate-600 dark:text-slate-400">Harga</span>
+                    <span className="text-sm font-semibold text-slate-900 dark:text-white">Rp {(sim.price || 0).toLocaleString('id-ID')}</span>
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-slate-700">
-                  <div className="flex items-center gap-2 text-xs text-slate-400">
+                <div className="pt-4 border-t border-slate-300 dark:border-slate-700">
+                  <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
                     <Clock size={14} />
                     <span>{formatDate(sim.createdAt)}</span>
                   </div>

@@ -172,8 +172,8 @@ const Product = () => {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Product Management</h1>
-          <p className="mt-1 text-slate-400">Kelola dan tambah produk baru</p>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Product Management</h1>
+          <p className="mt-1 text-slate-600 dark:text-slate-400">Kelola dan tambah produk baru</p>
         </div>
         <button
           onClick={handleAddPackage}
@@ -186,29 +186,29 @@ const Product = () => {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-4 shadow-lg">
-          <p className="text-slate-400 text-sm mb-1">Total Products</p>
-          <p className="text-3xl font-bold text-white mb-2">{packages.length}</p>
-          <p className="text-xs text-slate-500">Active product catalog</p>
-          <p className="text-xs text-slate-500">Available for sale</p>
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-4 shadow-lg">
+          <p className="text-slate-600 dark:text-slate-400 text-sm mb-1">Total Products</p>
+          <p className="text-3xl font-bold text-slate-900 dark:text-white mb-2">{packages.length}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-500">Active product catalog</p>
+          <p className="text-xs text-slate-500 dark:text-slate-500">Available for sale</p>
         </div>
-        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-4 shadow-lg">
-          <p className="text-slate-400 text-sm mb-1">Categories</p>
-          <p className="text-3xl font-bold text-white mb-2">{new Set(packages.map(p => p.category)).size}</p>
-          <p className="text-xs text-slate-500">Product categories</p>
-          <p className="text-xs text-slate-500">Unique segments</p>
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-4 shadow-lg">
+          <p className="text-slate-600 dark:text-slate-400 text-sm mb-1">Categories</p>
+          <p className="text-3xl font-bold text-slate-900 dark:text-white mb-2">{new Set(packages.map(p => p.category)).size}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-500">Product categories</p>
+          <p className="text-xs text-slate-500 dark:text-slate-500">Unique segments</p>
         </div>
-        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-4 shadow-lg">
-          <p className="text-slate-400 text-sm mb-1">Avg Price</p>
-          <p className="text-3xl font-bold text-white mb-2">{packages.length > 0 ? `Rp ${(packages.reduce((sum, p) => sum + (p.price || 0), 0) / packages.length).toLocaleString('id-ID')}` : 'Rp 0'}</p>
-          <p className="text-xs text-slate-500">Average product price</p>
-          <p className="text-xs text-slate-500">Across catalog</p>
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-4 shadow-lg">
+          <p className="text-slate-600 dark:text-slate-400 text-sm mb-1">Avg Price</p>
+          <p className="text-3xl font-bold text-slate-900 dark:text-white mb-2">{packages.length > 0 ? `Rp ${(packages.reduce((sum, p) => sum + (p.price || 0), 0) / packages.length).toLocaleString('id-ID')}` : 'Rp 0'}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-500">Average product price</p>
+          <p className="text-xs text-slate-500 dark:text-slate-500">Across catalog</p>
         </div>
-        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-4 shadow-lg">
-          <p className="text-slate-400 text-sm mb-1">Avg Duration</p>
-          <p className="text-3xl font-bold text-white mb-2">{packages.length > 0 ? `${(packages.reduce((sum, p) => sum + (p.duration || p.durationDays || 30), 0) / packages.length).toFixed(0)} days` : '0 days'}</p>
-          <p className="text-xs text-slate-500">Average plan duration</p>
-          <p className="text-xs text-slate-500">Per subscription</p>
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-4 shadow-lg">
+          <p className="text-slate-600 dark:text-slate-400 text-sm mb-1">Avg Duration</p>
+          <p className="text-3xl font-bold text-slate-900 dark:text-white mb-2">{packages.length > 0 ? `${(packages.reduce((sum, p) => sum + (p.duration || p.durationDays || 30), 0) / packages.length).toFixed(0)} days` : '0 days'}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-500">Average plan duration</p>
+          <p className="text-xs text-slate-500 dark:text-slate-500">Per subscription</p>
         </div>
       </div>
 
@@ -221,7 +221,7 @@ const Product = () => {
             placeholder="Cari produk, kategori, atau ID..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 py-2.5 pl-10 pr-4 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+            className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 py-2.5 pl-10 pr-4 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
           />
         </div>
       </div>
@@ -300,19 +300,19 @@ const Product = () => {
         )}
         {/* Pagination controls (mobile) */}
         <div className="flex items-center justify-between gap-3 mt-3">
-          <div className="text-sm text-slate-400">Halaman {currentPage} / {totalPages}</div>
+          <div className="text-sm text-slate-600 dark:text-slate-400">Halaman {currentPage} / {totalPages}</div>
           <div className="flex items-center gap-2">
             <button
               disabled={currentPage <= 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              className="rounded px-3 py-1 text-xs bg-slate-800 border border-slate-700 text-slate-300 disabled:opacity-50"
+              className="rounded px-3 py-1 text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 disabled:opacity-50"
             >Prev</button>
             <button
               disabled={currentPage >= totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              className="rounded px-3 py-1 text-xs bg-slate-800 border border-slate-700 text-slate-300 disabled:opacity-50"
+              className="rounded px-3 py-1 text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 disabled:opacity-50"
             >Next</button>
-            <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="ml-2 rounded bg-slate-800 border border-slate-700 text-sm text-slate-300 px-2 py-1">
+            <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="ml-2 rounded bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm text-slate-700 dark:text-slate-300 px-2 py-1">
               <option value={5}>5</option>
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -322,28 +322,28 @@ const Product = () => {
       </div>
 
       {/* Desktop Table View */}
-      <div className="hidden md:block rounded-xl border border-slate-800 bg-slate-900/80 shadow-lg overflow-hidden">
+      <div className="hidden md:block rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 shadow-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[800px]">
-            <thead className="border-b border-slate-800 bg-slate-800/50">
+            <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap">Product ID</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap min-w-[200px]">Nama</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap min-w-[150px] hidden lg:table-cell">Deskripsi</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap">Kategori</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap">Harga</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap hidden md:table-cell">Data (GB)</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap hidden md:table-cell">Durasi</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap hidden lg:table-cell">Menit</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap hidden lg:table-cell">SMS</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-300 whitespace-nowrap hidden sm:table-cell">VOD</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-300 whitespace-nowrap">Aksi</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap">Product ID</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap min-w-[200px]">Nama</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap min-w-[150px] hidden lg:table-cell">Deskripsi</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap">Kategori</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap">Harga</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap hidden md:table-cell">Data (GB)</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap hidden md:table-cell">Durasi</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap hidden lg:table-cell">Menit</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap hidden lg:table-cell">SMS</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap hidden sm:table-cell">VOD</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap">Aksi</th>
               </tr>
             </thead>
             <tbody>
               {paginatedPackages.length === 0 ? (
                 <tr>
-                  <td colSpan="11" className="px-6 py-8 text-center text-slate-400">
+                  <td colSpan="11" className="px-6 py-8 text-center text-slate-500 dark:text-slate-400">
                     {packages.length === 0 ? 'Memuat data produk...' : 'Tidak ada produk ditemukan'}
                   </td>
                 </tr>
@@ -351,18 +351,18 @@ const Product = () => {
                 paginatedPackages.map((pkg, idx) => (
                   <tr 
                     key={pkg.id || pkg.productId || idx} 
-                    className="border-b border-slate-800 transition hover:bg-slate-800/30 animate-fade-in-up"
+                    className="border-b border-slate-200 dark:border-slate-800 transition hover:bg-slate-100 dark:hover:bg-slate-800/30 animate-fade-in-up"
                     style={{ animationDelay: `${idx * 50}ms` }}
                   >
-                    <td className="px-4 py-4 text-sm font-medium text-white whitespace-nowrap">
+                    <td className="px-4 py-4 text-sm font-medium text-slate-900 dark:text-white whitespace-nowrap">
                       {pkg.productId || pkg.id || 'N/A'}
                     </td>
-                    <td className="px-4 py-4 text-sm text-slate-300">
+                    <td className="px-4 py-4 text-sm text-slate-800 dark:text-slate-300">
                       <div className="max-w-[200px] truncate" title={pkg.productName || pkg.name || 'N/A'}>
                         {pkg.productName || pkg.name || 'N/A'}
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-sm text-slate-400 hidden lg:table-cell">
+                    <td className="px-4 py-4 text-sm text-slate-600 dark:text-slate-400 hidden lg:table-cell">
                       <div className="max-w-[150px] truncate" title={pkg.description || 'Tidak ada deskripsi'}>
                         {pkg.description || '-'}
                       </div>
@@ -380,22 +380,22 @@ const Product = () => {
                         {pkg.category || 'Data'}
                       </span>
                     </td>
-                    <td className="px-4 py-4 text-sm font-medium text-white whitespace-nowrap">
+                    <td className="px-4 py-4 text-sm font-medium text-slate-900 dark:text-white whitespace-nowrap">
                       Rp {(pkg.price || 0).toLocaleString('id-ID')}
                     </td>
-                    <td className="px-4 py-4 text-sm text-slate-300 whitespace-nowrap hidden md:table-cell">
+                    <td className="px-4 py-4 text-sm text-slate-800 dark:text-slate-300 whitespace-nowrap hidden md:table-cell">
                       {parseFloat(pkg.dataCapacity || 0).toFixed(1)}
                     </td>
-                    <td className="px-4 py-4 text-sm text-slate-300 whitespace-nowrap hidden md:table-cell">
+                    <td className="px-4 py-4 text-sm text-slate-800 dark:text-slate-300 whitespace-nowrap hidden md:table-cell">
                       {pkg.duration || pkg.durationDays || 30}
                     </td>
-                    <td className="px-4 py-4 text-sm text-slate-300 whitespace-nowrap hidden lg:table-cell">
+                    <td className="px-4 py-4 text-sm text-slate-800 dark:text-slate-300 whitespace-nowrap hidden lg:table-cell">
                       {parseFloat(pkg.minutes || 0).toFixed(0)}
                     </td>
-                    <td className="px-4 py-4 text-sm text-slate-300 whitespace-nowrap hidden lg:table-cell">
+                    <td className="px-4 py-4 text-sm text-slate-800 dark:text-slate-300 whitespace-nowrap hidden lg:table-cell">
                       {parseFloat(pkg.sms || 0).toFixed(0)}
                     </td>
-                    <td className="px-4 py-4 text-sm text-slate-300 whitespace-nowrap hidden sm:table-cell">
+                    <td className="px-4 py-4 text-sm text-slate-800 dark:text-slate-300 whitespace-nowrap hidden sm:table-cell">
                       {parseFloat(pkg.vodCapacity || 0).toFixed(1)}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
@@ -423,21 +423,21 @@ const Product = () => {
           </table>
         </div>
         {/* Desktop pagination */}
-        <div className="flex items-center justify-between gap-3 p-4 border-t border-slate-800 bg-slate-900/60">
-          <div className="text-sm text-slate-400">Menampilkan {Math.min(filteredPackages.length, pageSize)} dari {filteredPackages.length} hasil</div>
+      <div className="flex items-center justify-between gap-3 p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60">
+        <div className="text-sm text-slate-600 dark:text-slate-400">Menampilkan {Math.min(filteredPackages.length, pageSize)} dari {filteredPackages.length} hasil</div>
           <div className="flex items-center gap-2">
             <button
               disabled={currentPage <= 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              className="rounded px-3 py-1 text-xs bg-slate-800 border border-slate-700 text-slate-300 disabled:opacity-50"
+            className="rounded px-3 py-1 text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 disabled:opacity-50"
             >Prev</button>
-            <div className="text-sm text-slate-300 px-3">{currentPage} / {totalPages}</div>
+          <div className="text-sm text-slate-700 dark:text-slate-300 px-3">{currentPage} / {totalPages}</div>
             <button
               disabled={currentPage >= totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              className="rounded px-3 py-1 text-xs bg-slate-800 border border-slate-700 text-slate-300 disabled:opacity-50"
+            className="rounded px-3 py-1 text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 disabled:opacity-50"
             >Next</button>
-            <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="ml-2 rounded bg-slate-800 border border-slate-700 text-sm text-slate-300 px-2 py-1">
+          <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="ml-2 rounded bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm text-slate-700 dark:text-slate-300 px-2 py-1">
               <option value={10}>10</option>
               <option value={25}>25</option>
               <option value={50}>50</option>
@@ -456,7 +456,7 @@ const Product = () => {
             left: 0, 
             right: 0, 
             bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backgroundColor: 'rgba(0, 0, 0, 0.55)',
             backdropFilter: 'blur(4px)',
             zIndex: 99999,
             opacity: 1
@@ -464,27 +464,25 @@ const Product = () => {
           onClick={handleCloseModal}
         >
           <div
-            className={`relative h-full w-full max-w-2xl md:max-w-xl lg:max-w-2xl rounded-l-xl border-l border-slate-800 bg-slate-900 p-4 sm:p-6 shadow-2xl overflow-y-auto ${isClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
+            className={`relative h-full w-full max-w-2xl md:max-w-xl lg:max-w-2xl rounded-l-xl border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white p-4 sm:p-6 shadow-2xl overflow-y-auto ${isClosing ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}
             onClick={(e) => e.stopPropagation()}
             style={{ 
               zIndex: 100000,
               position: 'relative',
               opacity: 1,
-              backgroundColor: 'rgb(15 23 42)',
-              color: 'white',
               display: 'block',
               visibility: 'visible',
               transition: 'transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.5s cubic-bezier(0.23, 1, 0.32, 1)'
             }}
           >
             {/* Modal Header */}
-            <div className="mb-6 flex items-center justify-between border-b border-slate-800 pb-4">
-              <h2 className="text-2xl font-bold text-white tracking-tight">
+            <div className="mb-6 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
                 {editingPackage ? 'Edit Paket' : 'Tambah Paket Baru'}
               </h2>
               <button
                 onClick={handleCloseModal}
-                className="rounded-lg text-slate-400 transition hover:bg-slate-800 hover:text-white p-1"
+                className="rounded-lg text-slate-500 dark:text-slate-400 transition hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white p-1"
               >
                 <X size={24} />
               </button>
@@ -493,37 +491,37 @@ const Product = () => {
             {/* Modal Body */}
             <div className="max-h-[calc(90vh-200px)] space-y-4 overflow-y-auto">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Nama Paket</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Nama Paket</label>
                 <input
                   type="text"
                   name="productName"
                   value={formData.productName}
                   onChange={handleFormChange}
                   placeholder="Masukkan nama paket"
-                  className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Deskripsi</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Deskripsi</label>
                 <textarea
                   name="description"
                   value={formData.description}
                   onChange={handleFormChange}
                   placeholder="Masukkan deskripsi paket"
                   rows="3"
-                  className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                 />
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Kategori</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Kategori</label>
                   <select
                     name="category"
                     value={formData.category}
                     onChange={handleFormChange}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                   >
                     <option value="Data">Data</option>
                     <option value="Combo">Combo</option>
@@ -535,86 +533,86 @@ const Product = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Harga (Rp)</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Harga (Rp)</label>
                   <input
                     type="number"
                     name="price"
                     value={formData.price}
                     onChange={handleFormChange}
                     placeholder="0"
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Durasi (hari)</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Durasi (hari)</label>
                   <input
                     type="number"
                     name="duration"
                     value={formData.duration}
                     onChange={handleFormChange}
                     placeholder="30"
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                   />
                 </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Data (GB)</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Data (GB)</label>
                   <input
                     type="number"
                     name="dataCapacity"
                     value={formData.dataCapacity}
                     onChange={handleFormChange}
                     placeholder="0"
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Menit Panggilan</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Menit Panggilan</label>
                   <input
                     type="number"
                     name="minutes"
                     value={formData.minutes}
                     onChange={handleFormChange}
                     placeholder="0"
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">SMS</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">SMS</label>
                   <input
                     type="number"
                     name="sms"
                     value={formData.sms}
                     onChange={handleFormChange}
                     placeholder="0"
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">VOD (GB)</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">VOD (GB)</label>
                 <input
                   type="number"
                   name="vodCapacity"
                   value={formData.vodCapacity}
                   onChange={handleFormChange}
                   placeholder="0"
-                  className="w-full rounded-lg border border-slate-700 bg-slate-800/50 text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-500 px-4 py-2 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
                 />
               </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="mt-6 flex justify-end gap-3 border-t border-slate-800 pt-4">
+            <div className="mt-6 flex justify-end gap-3 border-t border-slate-200 dark:border-slate-800 pt-4">
               <button
                 onClick={handleCloseModal}
-                className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-slate-300 transition hover:bg-slate-700 hover:text-white"
+                className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-slate-700 dark:text-slate-300 transition hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white"
               >
                 Batal
               </button>

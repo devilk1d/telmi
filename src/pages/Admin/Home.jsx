@@ -4,12 +4,14 @@ import { Chart, ArcElement, Tooltip, Legend } from 'chart.js'
 Chart.register(ArcElement, Tooltip, Legend)
 import { Users, Package, AlertTriangle, Sparkles } from 'lucide-react'
 import { getDashboardStats, getChurnComposition } from '../../services/api'
+import { useTheme } from '../../contexts/ThemeContext'
 
 const Home = () => {
   const [stats, setStats] = useState(null)
   const [churnComposition, setChurnComposition] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const { theme } = useTheme()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -38,10 +40,10 @@ const Home = () => {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-950">
+      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-slate-950 text-slate-900 dark:text-white">
         <div className="text-center">
-          <div className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-slate-700 border-t-cyan-500"></div>
-          <p className="text-slate-400">Memuat dashboard...</p>
+          <div className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-slate-300 dark:border-slate-700 border-t-cyan-500 dark:border-t-cyan-400"></div>
+          <p className="text-slate-600 dark:text-slate-400">Memuat dashboard...</p>
         </div>
       </div>
     )
@@ -49,8 +51,8 @@ const Home = () => {
 
   if (!stats) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-950">
-        <p className="text-slate-400">{error || 'Error memuat statistik'}</p>
+      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-slate-950 text-slate-900 dark:text-white">
+        <p className="text-slate-600 dark:text-slate-400">{error || 'Error memuat statistik'}</p>
       </div>
     )
   }
@@ -111,16 +113,16 @@ const Home = () => {
   }
 
   return (
-    <div className="w-full space-y-4 md:space-y-6 animate-fade-in-up">
+    <div className="w-full space-y-4 md:space-y-6 animate-fade-in-up text-slate-900 dark:text-white">
       {/* Header */}
-      <div className="rounded-xl md:rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-5 md:p-6 lg:p-8 text-white shadow-xl border border-slate-700/50 animate-fade-in-up delay-100">
+      <div className="rounded-xl md:rounded-2xl bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-5 md:p-6 lg:p-8 text-slate-900 dark:text-white shadow-xl border border-slate-200 dark:border-slate-700/50 animate-fade-in-up delay-100">
         <div className="flex items-center gap-3 md:gap-4 mb-4">
-          <div className="inline-flex p-2.5 md:p-3 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
-            <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-cyan-400" />
+          <div className="inline-flex p-2.5 md:p-3 rounded-xl bg-cyan-500/15 dark:bg-cyan-500/20 border border-cyan-500/30">
+            <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-cyan-600 dark:text-cyan-400" />
           </div>
           <div>
             <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight">Dashboard Overview</h1>
-            <p className="mt-1.5 md:mt-2 text-slate-300 text-sm md:text-base">Selamat datang di dashboard analitik Telvora</p>
+            <p className="mt-1.5 md:mt-2 text-slate-700 dark:text-slate-300 text-sm md:text-base">Selamat datang di dashboard analitik Telvora</p>
           </div>
         </div>
       </div>
@@ -132,7 +134,7 @@ const Home = () => {
           return (
             <div
               key={idx}
-              className="rounded-xl border border-slate-800 bg-slate-900/80 p-5 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 animate-fade-in-up"
+              className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-5 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 animate-fade-in-up"
               style={{ animationDelay: `${200 + idx * 100}ms` }}
             >
               <div className="flex items-center gap-4 mb-4">
@@ -140,13 +142,12 @@ const Home = () => {
                   <Icon size={32} />
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-white mb-1">{stat.label}</p>
-                  <p className="text-2xl font-extrabold text-white tracking-tight">{stat.value}</p>
-                  <span className={`text-sm font-semibold ${stat.changeColor}`}>{stat.change}</span>
+                  <p className="text-lg font-bold text-slate-900 dark:text-white mb-1">{stat.label}</p>
+                  <p className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">{stat.value}</p>
+                  {stat.label === 'Alert Churn' && (
+                    <span className={`text-sm font-semibold ${stat.changeColor}`}>{stat.change}</span>
+                  )}
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={`text-sm font-semibold ${stat.changeColor}`}>{stat.change}</span>
               </div>
             </div>
           )
@@ -157,12 +158,12 @@ const Home = () => {
       {churnComposition && (
         <div className="grid gap-4 md:gap-6">
           {/* Pie Chart */}
-          <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden w-full">
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden w-full">
             <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-5 md:mb-6">
               <div className="inline-flex p-1.5 sm:p-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                <Package className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
+                <Package className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500 dark:text-purple-400" />
               </div>
-              <h2 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight">Komposisi Risiko Churn</h2>
+              <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 dark:text-white tracking-tight">Komposisi Risiko Churn</h2>
             </div>
             <div className="relative w-full h-64 sm:h-72 md:h-80">
               <Pie
@@ -183,7 +184,7 @@ const Home = () => {
                       position: 'bottom',
                       labels: {
                         padding: 20,
-                        color: '#e2e8f0',
+                        color: theme === 'dark' ? '#e2e8f0' : '#0f172a',
                         font: {
                           size: 12,
                           weight: '500',
@@ -191,10 +192,10 @@ const Home = () => {
                       },
                     },
                     tooltip: {
-                      backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                      titleColor: '#fff',
-                      bodyColor: '#e2e8f0',
-                      borderColor: '#334155',
+                      backgroundColor: theme === 'dark' ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255,255,255,0.95)',
+                      titleColor: theme === 'dark' ? '#fff' : '#0f172a',
+                      bodyColor: theme === 'dark' ? '#e2e8f0' : '#0f172a',
+                      borderColor: theme === 'dark' ? '#334155' : '#cbd5e1',
                       borderWidth: 1,
                       padding: 12,
                       cornerRadius: 8,

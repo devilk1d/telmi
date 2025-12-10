@@ -43,13 +43,13 @@ const ConfirmDialog = ({
     <div 
       className="fixed inset-0 flex items-center justify-center p-4 z-[99999] animate-fade-in-overlay"
       style={{ 
-        backgroundColor: 'rgba(0, 0, 0, 0.75)',
+        backgroundColor: 'rgba(0, 0, 0, 0.55)',
         backdropFilter: 'blur(4px)'
       }}
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-6 shadow-2xl animate-fade-in-up"
+        className="relative w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-2xl animate-fade-in-up text-slate-900 dark:text-white"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -70,8 +70,8 @@ const ConfirmDialog = ({
             <AlertTriangle className={styles.icon} size={24} />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
-            <p className="text-sm text-slate-300 leading-relaxed">{message}</p>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{title}</h3>
+            <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{message}</p>
           </div>
         </div>
 

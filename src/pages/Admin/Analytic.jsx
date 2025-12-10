@@ -28,10 +28,10 @@ const Analytic = () => {
 
   if (loading || !analyticsData) {
     return (
-      <div className="flex h-96 items-center justify-center">
+      <div className="flex h-96 items-center justify-center bg-white dark:bg-slate-950 text-slate-900 dark:text-white">
         <div className="text-center">
-          <div className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-slate-700 border-t-cyan-500"></div>
-          <p className="text-slate-400">Memuat analytics...</p>
+          <div className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-slate-300 dark:border-slate-700 border-t-cyan-500"></div>
+          <p className="text-slate-600 dark:text-slate-400">Memuat analytics...</p>
         </div>
       </div>
     )
@@ -54,29 +54,29 @@ const Analytic = () => {
 
 
   return (
-    <div className="space-y-8 animate-fade-in-up">
+    <div className="space-y-8 animate-fade-in-up text-slate-900 dark:text-white">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">Analytics Dashboard</h1>
-        <p className="mt-1 text-slate-400">Analisis behaviour trends dan efektivitas produk</p>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Analytics Dashboard</h1>
+        <p className="mt-1 text-slate-700 dark:text-slate-400">Analisis behaviour trends dan efektivitas produk</p>
       </div>
 
       {/* Tab Bar */}
-      <div className="flex gap-2 border-b border-slate-800 mb-4">
+      <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 mb-4">
         <button
-          className={`px-4 py-2 font-semibold rounded-t-md focus:outline-none transition-colors ${tab === 0 ? 'bg-slate-900 text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-400 hover:text-cyan-400'}`}
+          className={`px-4 py-2 font-semibold rounded-t-md focus:outline-none transition-colors ${tab === 0 ? 'bg-white dark:bg-slate-900 text-cyan-600 dark:text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-600 dark:text-slate-400 hover:text-cyan-500 dark:hover:text-cyan-400'}`}
           onClick={() => setTab(0)}
         >
           Model
         </button>
         <button
-          className={`px-4 py-2 font-semibold rounded-t-md focus:outline-none transition-colors ${tab === 1 ? 'bg-slate-900 text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-400 hover:text-cyan-400'}`}
+          className={`px-4 py-2 font-semibold rounded-t-md focus:outline-none transition-colors ${tab === 1 ? 'bg-white dark:bg-slate-900 text-cyan-600 dark:text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-600 dark:text-slate-400 hover:text-cyan-500 dark:hover:text-cyan-400'}`}
           onClick={() => setTab(1)}
         >
           Customer Behaviour
         </button>
         <button
-          className={`px-4 py-2 font-semibold rounded-t-md focus:outline-none transition-colors ${tab === 2 ? 'bg-slate-900 text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-400 hover:text-cyan-400'}`}
+          className={`px-4 py-2 font-semibold rounded-t-md focus:outline-none transition-colors ${tab === 2 ? 'bg-white dark:bg-slate-900 text-cyan-600 dark:text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-600 dark:text-slate-400 hover:text-cyan-500 dark:hover:text-cyan-400'}`}
           onClick={() => setTab(2)}
         >
           Product
@@ -87,8 +87,8 @@ const Analytic = () => {
       {tab === 0 && (
         <div className="space-y-6">
           <div>
-            <h2 className="text-2xl font-bold text-white tracking-tight">Kinerja Model Rekomendasi</h2>
-            <p className="mt-1 text-sm text-slate-400">Evaluasi performa model machine learning dalam memprediksi target offer</p>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Kinerja Model Rekomendasi</h2>
+            <p className="mt-1 text-sm text-slate-700 dark:text-slate-400">Evaluasi performa model machine learning dalam memprediksi target offer</p>
           </div>
           <div className="grid gap-6 md:grid-cols-3">
             {/* Accuracy Card */}
@@ -98,11 +98,11 @@ const Analytic = () => {
                   <TrendingUp className="text-emerald-400" size={28} />
                 </div>
                 <div>
-                  <p className="text-sm text-slate-400">Model Accuracy</p>
-                  <p className="text-3xl font-bold text-white">{modelAccuracy !== null ? `${modelAccuracy}%` : 'N/A'}</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">Model Accuracy</p>
+                  <p className="text-3xl font-bold text-slate-900 dark:text-white">{modelAccuracy !== null ? `${modelAccuracy}%` : 'N/A'}</p>
                 </div>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 Akurasi model Random Forest pada {totalUsers.toLocaleString()} pelanggan
               </p>
             </div>
@@ -113,11 +113,11 @@ const Analytic = () => {
                   <Package className="text-cyan-400" size={28} />
                 </div>
                 <div>
-                  <p className="text-sm text-slate-400">Total Classes</p>
-                  <p className="text-3xl font-bold text-white">{modelPerf.total_classes || 0}</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">Total Classes</p>
+                  <p className="text-3xl font-bold text-slate-900 dark:text-white">{modelPerf.total_classes || 0}</p>
                 </div>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 Jumlah kategori target offer yang diprediksi model
               </p>
             </div>
@@ -128,30 +128,30 @@ const Analytic = () => {
                   <BarChart3 className="text-purple-400" size={28} />
                 </div>
                 <div>
-                  <p className="text-sm text-slate-400">Model Type</p>
-                  <p className="text-xl font-bold text-white">Random Forest</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">Model Type</p>
+                  <p className="text-xl font-bold text-slate-900 dark:text-white">Random Forest</p>
                 </div>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 Multi-class classification untuk prediksi target offer
               </p>
             </div>
           </div>
           {/* Model Classes Info */}
           {modelPerf.classes && modelPerf.classes.length > 0 && (
-            <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-6 shadow-lg">
-              <h3 className="mb-4 text-lg font-bold text-white tracking-tight">Target Offer Classes</h3>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-6 shadow-lg">
+              <h3 className="mb-4 text-lg font-bold text-slate-900 dark:text-white tracking-tight">Target Offer Classes</h3>
               <div className="flex flex-wrap gap-2">
                 {modelPerf.classes.map((className, idx) => (
                   <span 
                     key={idx} 
-                    className="px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 text-xs text-slate-300"
+                    className="px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300"
                   >
                     {className}
                   </span>
                 ))}
               </div>
-              <p className="mt-4 text-xs text-slate-400">
+              <p className="mt-4 text-xs text-slate-600 dark:text-slate-400">
                 ℹ️ Model dilatih untuk memprediksi {modelPerf.total_classes} kategori target offer berdasarkan perilaku pelanggan
               </p>
             </div>
@@ -162,96 +162,78 @@ const Analytic = () => {
       {tab === 1 && (
         <div className="space-y-6">
           <div>
-            <h2 className="text-2xl font-bold text-white tracking-tight">Customer Behaviour Highlights</h2>
-            <p className="mt-1 text-sm text-slate-400">Analisis perilaku pelanggan berdasarkan data usage, plan type, dan preferensi konten</p>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Customer Behaviour Highlights</h2>
+            <p className="mt-1 text-sm text-slate-700 dark:text-slate-400">Analisis perilaku pelanggan berdasarkan data usage, plan type, dan preferensi konten</p>
           </div>
           {/* 1. HIGH DATA USERS */}
-          <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-6 shadow-lg">
-            <h3 className="mb-4 text-lg font-bold text-white tracking-tight">Data Usage Trends</h3>
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-6 shadow-lg">
+            <h3 className="mb-4 text-lg font-bold text-slate-900 dark:text-white tracking-tight">Data Usage Trends</h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-400">Threshold 'High Data User'</span>
-                <span className="text-lg font-bold text-white">
+                <span className="text-sm text-slate-600 dark:text-slate-400">Threshold 'High Data User'</span>
+                <span className="text-lg font-bold text-slate-900 dark:text-white">
                   {highData.threshold ? `${highData.threshold.toFixed(2)} GB` : 'N/A'}
                 </span>
               </div>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-600 dark:text-slate-500">
                 (max(10GB, Q3={highData.q75_usage ? highData.q75_usage.toFixed(2) : 'N/A'}GB))
               </p>
-              <div className="flex items-center justify-between pt-2 border-t border-slate-700">
-                <span className="text-sm text-slate-400">High Data Users</span>
-                <span className="text-2xl font-bold text-cyan-400">
-                  {highData.count?.toLocaleString() || 0} <span className="text-sm text-slate-400">({highData.percentage || 0}%)</span>
+              <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-700">
+                <span className="text-sm text-slate-600 dark:text-slate-400">High Data Users</span>
+                <span className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">
+                  {highData.count?.toLocaleString() || 0} <span className="text-sm text-slate-600 dark:text-slate-400">({highData.percentage || 0}%)</span>
                 </span>
               </div>
-              <p className="text-xs text-slate-500">dari {totalUsers.toLocaleString()} total users</p>
+              <p className="text-xs text-slate-600 dark:text-slate-500">dari {totalUsers.toLocaleString()} total users</p>
             </div>
           </div>
           {/* 2. MONTHLY SPEND PER PLAN TYPE */}
-          <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-6 shadow-lg">
-            <h3 className="mb-4 text-lg font-bold text-white tracking-tight">Monthly Spend Trends (Per Plan Type)</h3>
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-6 shadow-lg">
+            <h3 className="mb-4 text-lg font-bold text-slate-900 dark:text-white tracking-tight">Monthly Spend Trends (Per Plan Type)</h3>
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700">
-                <p className="text-sm text-slate-400 mb-2">Postpaid</p>
-                <p className="text-2xl font-bold text-cyan-400">
+              <div className="p-4 rounded-lg bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Postpaid</p>
+                <p className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">
                   Rp {planSpend.Postpaid?.toLocaleString?.('id-ID') || planSpend.Postpaid?.toLocaleString() || 0}
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-slate-600 dark:text-slate-500 mt-1">
                   {planCounts.Postpaid?.toLocaleString() || 0} users ({pctPostpaid}%)
                 </p>
               </div>
-              <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700">
-                <p className="text-sm text-slate-400 mb-2">Prepaid</p>
-                <p className="text-2xl font-bold text-amber-400">
+              <div className="p-4 rounded-lg bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Prepaid</p>
+                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                   Rp {planSpend.Prepaid?.toLocaleString?.('id-ID') || planSpend.Prepaid?.toLocaleString() || 0}
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-slate-600 dark:text-slate-500 mt-1">
                   {planCounts.Prepaid?.toLocaleString() || 0} users ({pctPrepaid}%)
                 </p>
               </div>
             </div>
           </div>
           {/* 3. VIDEO vs VOICE vs BALANCED */}
-          <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-6 shadow-lg">
-            <h3 className="mb-4 text-lg font-bold text-white tracking-tight">Video vs Voice Behaviour</h3>
-            <p className="text-xs text-slate-500 mb-4">
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-6 shadow-lg">
+            <h3 className="mb-4 text-lg font-bold text-slate-900 dark:text-white tracking-tight">Video vs Voice Behaviour</h3>
+            <p className="text-xs text-slate-600 dark:text-slate-500 mb-4">
               Median Call Duration: {videoVoice.median_call?.toFixed ? videoVoice.median_call.toFixed(1) : videoVoice.median_call || 0} menit
             </p>
             <div className="space-y-4">
               {[ 
-                { 
-                  label: 'Video Lovers', 
-                  desc: '(≥60% waktu di video)',
-                  value: pctVideo, 
-                  count: videoVoice.video_lovers || 0, 
-                  color: 'bg-red-500' 
-                },
-                { 
-                  label: 'Voice Lovers', 
-                  desc: '(video ≤40%, call ≥ median)',
-                  value: pctVoice, 
-                  count: videoVoice.voice_lovers || 0, 
-                  color: 'bg-blue-500' 
-                },
-                { 
-                  label: 'Balanced Users', 
-                  desc: '(tidak masuk kategori lainnya)',
-                  value: pctBalanced, 
-                  count: videoVoice.balanced || 0, 
-                  color: 'bg-emerald-500' 
-                }
+                { label: 'Video Lovers', desc: '(≥60% waktu di video)', value: pctVideo, count: videoVoice.video_lovers || 0, color: 'bg-red-500' },
+                { label: 'Voice Lovers', desc: '(video ≤40%, call ≥ median)', value: pctVoice, count: videoVoice.voice_lovers || 0, color: 'bg-blue-500' },
+                { label: 'Balanced Users', desc: '(tidak masuk kategori lainnya)', value: pctBalanced, count: videoVoice.balanced || 0, color: 'bg-emerald-500' }
               ].map((item, idx) => (
                 <div key={item.label} className="animate-fade-in-up" style={{ animationDelay: `${idx * 100}ms` }}>
                   <div className="flex items-center justify-between mb-2">
                     <div>
-                      <span className="text-sm font-medium text-slate-300">{item.label}</span>
-                      <span className="text-xs text-slate-500 ml-2">{item.desc}</span>
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{item.label}</span>
+                      <span className="text-xs text-slate-600 dark:text-slate-500 ml-2">{item.desc}</span>
                     </div>
-                    <span className="text-sm font-bold text-white">
+                    <span className="text-sm font-bold text-slate-900 dark:text-white">
                       {item.count.toLocaleString()} ({item.value}%)
                     </span>
                   </div>
-                  <div className="h-3 w-full rounded-full bg-slate-800">
+                  <div className="h-3 w-full rounded-full bg-slate-200 dark:bg-slate-800">
                     <div className={`h-full rounded-full ${item.color}`} style={{ width: `${item.value}%` }}></div>
                   </div>
                 </div>
@@ -264,22 +246,22 @@ const Analytic = () => {
       {tab === 2 && (
         <div className="space-y-6">
           <div>
-            <h2 className="text-2xl font-bold text-white tracking-tight">Product Effectiveness (Top 10 Recommended)</h2>
-            <p className="mt-1 text-sm text-slate-400">Produk yang paling sering direkomendasikan oleh model ML</p>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Product Effectiveness (Top 10 Recommended)</h2>
+            <p className="mt-1 text-sm text-slate-700 dark:text-slate-400">Produk yang paling sering direkomendasikan oleh model ML</p>
           </div>
-          <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-6 shadow-lg">
-            <h3 className="mb-6 text-lg font-bold text-white tracking-tight">Top 10 Produk Paling Sering Direkomendasikan</h3>
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-6 shadow-lg">
+            <h3 className="mb-6 text-lg font-bold text-slate-900 dark:text-white tracking-tight">Top 10 Produk Paling Sering Direkomendasikan</h3>
             <div className="space-y-4">
               {topProducts.length > 0 ? topProducts.map((product, idx) => (
                 <div key={product.product_name + idx} className="animate-fade-in-up" style={{ animationDelay: `${idx * 80}ms` }}>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-slate-500">#{idx + 1}</span>
-                      <span className="text-sm font-medium text-slate-300">{product.product_name}</span>
+                      <span className="text-xs font-bold text-slate-600 dark:text-slate-400">#{idx + 1}</span>
+                      <span className="text-sm font-medium text-slate-900 dark:text-slate-300">{product.product_name}</span>
                     </div>
-                    <span className="text-sm font-bold text-white">{product.count.toLocaleString()}x ({product.percentage}%)</span>
+                    <span className="text-sm font-bold text-slate-900 dark:text-white">{product.count.toLocaleString()}x ({product.percentage}%)</span>
                   </div>
-                  <div className="h-2 w-full rounded-full bg-slate-800">
+                  <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-800">
                     <div 
                       className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-500" 
                       style={{ width: `${product.percentage}%` }}
@@ -288,14 +270,14 @@ const Analytic = () => {
                 </div>
               )) : (
                 <div className="text-center py-8">
-                  <p className="text-slate-400">Sedang menghitung rekomendasi...</p>
-                  <p className="text-xs text-slate-500 mt-2">Proses ini membutuhkan waktu untuk {totalUsers.toLocaleString()} users</p>
+                  <p className="text-slate-600 dark:text-slate-400">Sedang menghitung rekomendasi...</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-500 mt-2">Proses ini membutuhkan waktu untuk {totalUsers.toLocaleString()} users</p>
                 </div>
               )}
             </div>
             {topProducts.length > 0 && (
-              <div className="mt-6 pt-6 border-t border-slate-700">
-                <p className="text-xs text-slate-400">
+              <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
+                <p className="text-xs text-slate-600 dark:text-slate-400">
                   ℹ️ Top 10 dihitung dari seluruh rekomendasi model untuk {totalUsers.toLocaleString()} user. 
                   Persentase mencerminkan porsi kemunculan produk di daftar rekomendasi.
                 </p>
