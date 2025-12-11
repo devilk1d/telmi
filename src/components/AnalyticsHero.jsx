@@ -35,23 +35,23 @@ const AnalyticsHero = () => {
         <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-emerald-400/5 rounded-full blur-[120px]"></div>
       </div>
 
-      <div className="container relative z-10 mx-auto px-4 py-20 lg:py-32">
+      <div className="container relative z-10 mx-auto px-4 py-16 sm:py-20 lg:py-32">
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           {/* Left Content */}
-          <div className="lg:col-span-8 space-y-8 animate-fade-in-up">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-800/70 border border-slate-700 text-slate-100 text-xs md:text-sm font-medium w-fit animate-fade-in delay-100 transition-colors duration-200 hover:bg-slate-700 hover:border-slate-500 animate-float-soft">
+          <div className="lg:col-span-8 space-y-8 animate-fade-in-up text-center lg:text-left max-w-2xl mx-auto lg:mx-0">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-800/70 border border-slate-700 text-slate-100 text-xs md:text-sm font-medium w-fit animate-fade-in delay-100 transition-colors duration-200 hover:bg-slate-700 hover:border-slate-500 animate-float-soft mx-auto lg:mx-0">
               <Sparkles className="w-4 h-4 text-cyan-300" />
               <span>Powered by Machine Learning</span>
             </div>
             
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tight bg-gradient-to-r from-white via-cyan-100 to-white bg-clip-text text-transparent animate-fade-in-up delay-200">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tight bg-gradient-to-r from-white via-cyan-100 to-white bg-clip-text text-transparent animate-fade-in-up delay-200">
               <span className="text-slate-900 dark:text-white">Telvora Analytics</span>
               <span className="block text-slate-700 dark:text-slate-200 text-2xl md:text-3xl lg:text-4xl font-semibold mt-2">
                 Portal monitoring operasional
               </span>
             </h1>
 
-            <p className="text-base md:text-lg lg:text-xl text-slate-300 leading-relaxed max-w-2xl animate-fade-in-up delay-300">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-slate-300 leading-relaxed max-w-2xl mx-auto lg:mx-0 animate-fade-in-up delay-300">
               <span className="text-slate-600 dark:text-slate-300">
                 Platform manajemen pelanggan dan rekomendasi produk berbasis Machine Learning.
                 <span className="block mt-2 text-slate-500 dark:text-slate-400">
@@ -60,7 +60,7 @@ const AnalyticsHero = () => {
               </span>
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up delay-400">
+            <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up delay-400 justify-center lg:justify-start">
               <Button
                 asChild
                 size="lg"
@@ -86,7 +86,7 @@ const AnalyticsHero = () => {
           </div>
           
           {/* Right Illustration - Simple Code Panel */}
-          <div className="lg:col-span-4 flex items-center justify-center animate-fade-in-up delay-400">
+          <div className="hidden md:flex lg:col-span-4 items-center justify-center animate-fade-in-up delay-400">
             <div className="relative w-full max-w-md transition-transform duration-500 ease-out hover:-translate-y-2 hover:shadow-2xl animate-float-soft">
               <div className="bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg">
                 <div className="flex items-center gap-2 px-5 py-3 border-b border-slate-200 dark:border-slate-800">

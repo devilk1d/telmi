@@ -22,10 +22,8 @@ const Footer = () => {
                 Telvora
               </span>
             </Link>
-                <p className="text-sm text-slate-900 leading-relaxed max-w-xs">
-              <p className="text-sm text-slate-900 dark:text-white leading-relaxed max-w-xs">
-                Platform analitik internal untuk mengelola pelanggan dan rekomendasi berbasis Machine Learning.
-              </p>
+            <p className="text-sm text-slate-900 dark:text-white leading-relaxed max-w-xs">
+              Platform analitik internal untuk mengelola pelanggan dan rekomendasi berbasis Machine Learning.
             </p>
           </div>
           
