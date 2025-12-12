@@ -336,8 +336,13 @@ export const deleteCustomer = async (id) => {
 }
 
 // ============================================
-// CUSTOMER INSIGHTS (Agentic Recsys + Churn)
+// CUSTOMER INSIGHTS (Pure ML - No DB Fallback)
 // ============================================
+/**
+ * Get customer insights dari ML model (pure prediction, tidak dari database).
+ * Target offer SELALU dari ML, tidak pernah dari DB.
+ * Churn prediction juga pure ML.
+ */
 export const getCustomerInsights = async (customerId, topN = 5) => {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 12000)
@@ -346,54 +351,47 @@ export const getCustomerInsights = async (customerId, topN = 5) => {
     recommendations: {
       items: [
         {
-          product_name: 'Combo Hemat 15GB + 300Menit 30 Hari',
-          category: 'Combo',
-          price: 15666,
+          product_name: 'Paket Data Premium 50GB 30 Hari',
+          category: 'Data',
+          price: 75000,
           duration_days: 30,
-          reasons: ['Rekomendasi Utama (Combo Value Terbaik/Termurah): Sesuai prediksi model: General Offer'],
+          reasons: ['Rekomendasi Utama (AI Model Prediction)'],
         },
         {
-          product_name: 'Combo Hemat 25GB + 300Menit 30 Hari',
+          product_name: 'Paket Combo Hemat 15GB + 300Menit 30 Hari',
           category: 'Combo',
-          price: 16062,
+          price: 50000,
           duration_days: 30,
-          reasons: ['Rekomendasi Utama (Combo Value Terbaik/Termurah): Sesuai prediksi model: General Offer'],
-        },
-        {
-          product_name: 'Combo Spesial 12GB + 300Menit 30 Hari',
-          category: 'Combo',
-          price: 17125,
-          duration_days: 30,
-          reasons: ['Rekomendasi Utama (Combo Value Terbaik/Termurah): Sesuai prediksi model: General Offer'],
-        },
-        {
-          product_name: 'Paket Voice Unlimited 7 Hari',
-          category: 'Voice',
-          price: 17000,
-          duration_days: 7,
-          reasons: ['Rekomendasi Sekunder Voice - Paket pendek sesuai profil'],
-        },
-        {
-          product_name: 'Roaming USA Pass 250MB 7 Hari',
-          category: 'Roaming',
-          price: 7635,
-          duration_days: 7,
-          reasons: ['Rekomendasi Sekunder Roaming - Paket pendek sesuai profil'],
+          reasons: ['Rekomendasi Tambahan (Cross-sell)'],
         },
       ],
     },
     churn: {
       probability: 0.0,
       label: 'low',
-      raw_label: 'General Offer',
+      raw_label: 'Unknown',
     },
-    ai_insights: {
-      product_recommendation:
-        'Berdasarkan kebutuhan Anda, kami merekomendasikan paket Combo Hemat dan Spesial yang menawarkan kuota data dan menit panggilan sesuai dengan penggunaan bulanan Anda. Dengan memilih salah satu paket ini, Anda dapat menikmati koneksi internet yang ngebut dan komunikasi yang jernih, bahkan akan mendapatkan tambahan menit dan kuota aplikasi favorit. Paket ini merupakan solusi lengkap tanpa yang bikin kantong bolong – pilih paket Combo yang paling sesuai dengan gaya hidup digital Anda sekarang!',
-      churn_analysis:
-        'Probabilitas churn rendah didukung oleh frekuensi komplain yang rendah dan pengeluaran bulanan yang moderat, namun travel score yang cukup tinggi menunjukkan potensi kebutuhan roaming atau data internasional yang belum terpenuhi. Perhatikan tren travel score di bulan-bulan mendatang dan tawarkan paket roaming/data yang relevan berdasarkan kategori prediksi "General Offer" untuk meningkatkan loyalitas.',
-    },
-    user_category: 'General Offer',
+    ai_insights: null,
+    user_category: 'Unknown',
+    source: 'fallback_ml_unavailable',
+  }
+
+  // Sanitizer kategori: pastikan hanya kategori valid yang ditampilkan
+  const sanitizeCategory = (cat) => {
+    const raw = String(cat || '').trim()
+    const allowed = ['Data', 'Voice', 'DeviceBundle', 'Roaming', 'General Offer']
+    if (allowed.includes(raw)) return raw
+    // Mapping umum untuk kategori tak valid
+    const map = {
+      'Combo': 'DeviceBundle',
+      'Combo Offer': 'DeviceBundle',
+      'Bundle': 'DeviceBundle',
+      'Device': 'DeviceBundle',
+      'Churn Prevention': 'General Offer',
+      'Unknown': 'General Offer',
+      '': 'General Offer'
+    }
+    return map[raw] || 'General Offer'
   }
 
   try {
@@ -405,14 +403,69 @@ export const getCustomerInsights = async (customerId, topN = 5) => {
     })
     clearTimeout(timeout)
     if (!res.ok) {
-      console.warn('Recsys service returned non-OK, using fallback')
+      console.warn(`⚠️ Recsys service returned ${res.status}, using ML fallback`)
       return fallback
     }
     const data = await res.json()
-    return data || fallback
+    // Terapkan sanitasi kategori pada rekomendasi dan user_category
+    let items = data?.recommendations?.items || []
+    items = items.map(it => ({
+      ...it,
+      category: sanitizeCategory(it.category)
+    }))
+    let userCat = sanitizeCategory(data?.user_category)
+    // Selaraskan dengan notebook: jika churn.raw_label = 'General Offer', paksa Target Offer = 'General Offer'
+    if (String(data?.churn?.raw_label || '').trim() === 'General Offer') {
+      userCat = 'General Offer'
+    }
+    return {
+      ...data,
+      recommendations: { items },
+      user_category: userCat,
+      source: 'ml_prediction'
+    }
   } catch (error) {
-    console.error('Error fetching customer insights, using fallback:', error)
+    console.error('⚠️ Error fetching customer insights from ML service:', error)
+    console.log('Using ML fallback response')
     return fallback
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+/**
+ * Predict target offer untuk customer BARU (tanpa ID di database).
+ * Pure ML prediction untuk user form input (add customer).
+ * 
+ * @param {Object} userProfile - Customer profile dengan field:
+ *   - plan_type, device_brand, avg_data_usage_gb, pct_video_usage, 
+ *   - avg_call_duration, sms_freq, monthly_spend, topup_freq, 
+ *   - travel_score, complaint_count
+ * @returns {Promise<Object>} ML prediction result
+ */
+export const predictCustomerOfferML = async (userProfile) => {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 10000)
+
+  try {
+    const res = await fetch(`${RECSYS_BASE_URL}/infer/predict-user`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userProfile),
+      signal: controller.signal,
+    })
+    clearTimeout(timeout)
+    
+    if (!res.ok) {
+      console.error(`❌ ML Prediction failed: ${res.status}`)
+      throw new Error(`ML prediction failed: ${res.statusText}`)
+    }
+    
+    const data = await res.json()
+    return data
+  } catch (error) {
+    console.error('❌ Error predicting customer offer:', error)
+    throw error
   } finally {
     clearTimeout(timeout)
   }
@@ -895,6 +948,8 @@ export default {
   createRecommendation,
   updateRecommendationStatus,
   getAnalytics,
+  getCustomerInsights,
+  predictCustomerOfferML,
   saveProductSimulation,
   getProductSimulations,
   deleteProductSimulation,

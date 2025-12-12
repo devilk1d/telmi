@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { getCustomers, getCustomerInsights, createCustomer, deleteCustomer } from '../../services/api'
+import { getCustomers, getCustomerInsights, createCustomer, deleteCustomer, predictCustomerOfferML } from '../../services/api'
 import { Search, X, AlertTriangle, Sparkles, ChevronRight, Plus, Trash2 } from 'lucide-react'
 import ConfirmDialog from '../../components/ConfirmDialog'
 
@@ -159,20 +159,55 @@ const UserProfile = () => {
       // Auto-generate customer ID
       const customerId = generateCustomerId()
 
-      // Convert form data to database format
+      // Normalisasi Video Usage: jika >1 dianggap persen (bagi 100),
+      // jika <=1 dianggap sudah desimal (0-1)
+      const rawVideo = formData.pct_video_usage !== '' && formData.pct_video_usage !== null
+        ? parseFloat(formData.pct_video_usage)
+        : null
+      const pctVideoDecimal = rawVideo === null
+        ? null
+        : (rawVideo > 1 ? (rawVideo / 100) : rawVideo)
+
+      // Prepare user profile untuk ML prediction
+      const userProfileForML = {
+        customer_id: customerId,
+        plan_type: formData.plan_type || 'Prepaid',
+        device_brand: formData.device_brand || 'Samsung',
+        avg_data_usage_gb: formData.avg_data_usage_gb ? parseFloat(formData.avg_data_usage_gb) : 0,
+        pct_video_usage: pctVideoDecimal !== null ? pctVideoDecimal : 0.5,
+        avg_call_duration: formData.avg_call_duration ? parseFloat(formData.avg_call_duration) : 0,
+        sms_freq: formData.sms_freq ? parseInt(formData.sms_freq) : 0,
+        monthly_spend: formData.monthly_spend ? parseFloat(formData.monthly_spend) : 0,
+        topup_freq: formData.topup_freq ? parseInt(formData.topup_freq) : 0,
+        travel_score: formData.travel_score ? parseFloat(formData.travel_score) : 0,
+        complaint_count: formData.complaint_count ? parseInt(formData.complaint_count) : 0,
+      }
+
+      // Get ML prediction untuk target offer (PURE ML, tidak dari DB)
+      let mlPrediction = null
+      try {
+        mlPrediction = await predictCustomerOfferML(userProfileForML)
+        console.log('✅ ML Prediction result:', mlPrediction)
+      } catch (error) {
+        console.warn('⚠️ ML prediction gagal, target_offer akan null (user harus run ML inference manual)', error)
+      }
+
+      // Convert form data ke database format
       const customerData = {
         customer_id: customerId,
         plan_type: formData.plan_type || null,
         device_brand: formData.device_brand || null,
         avg_data_usage_gb: formData.avg_data_usage_gb ? parseFloat(formData.avg_data_usage_gb) : null,
-        pct_video_usage: formData.pct_video_usage ? parseFloat(formData.pct_video_usage) / 100 : null, // Convert percentage to decimal
+        pct_video_usage: pctVideoDecimal !== null ? pctVideoDecimal : null,
         avg_call_duration: formData.avg_call_duration ? parseFloat(formData.avg_call_duration) : null,
         sms_freq: formData.sms_freq ? parseInt(formData.sms_freq) : null,
         monthly_spend: formData.monthly_spend ? parseFloat(formData.monthly_spend) : null,
         topup_freq: formData.topup_freq ? parseInt(formData.topup_freq) : null,
         travel_score: formData.travel_score ? parseFloat(formData.travel_score) : null,
         complaint_count: formData.complaint_count ? parseInt(formData.complaint_count) : 0,
-        target_offer: null
+        // 🎯 Store ML prediction result jika tersedia
+        // Catatan: target_offer column di DB adalah untuk informasi, tapi UI SELALU gunakan ML prediction
+        target_offer: mlPrediction?.pred_target_offer || null
       }
 
       await createCustomer(customerData)
@@ -180,7 +215,6 @@ const UserProfile = () => {
       handleCloseModal()
     } catch (error) {
       console.error('Error saving customer:', error)
-      alert('Gagal menyimpan data pelanggan.')
     }
   }
 
@@ -565,7 +599,7 @@ const UserProfile = () => {
                   </div>
                   <div className="text-right text-sm text-slate-600 dark:text-slate-400">
                     <p>Risk label</p>
-                    <p className="font-semibold text-slate-900 dark:text-white">{churnInsight?.raw_label || 'General Offer'}</p>
+                    <p className="font-semibold text-slate-900 dark:text-white">{insightLoading ? 'Loading...' : (churnInsight?.raw_label || 'General Offer')}</p>
                   </div>
                 </div>
                 <div className="mt-4 rounded-lg bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 p-4">
@@ -633,7 +667,7 @@ const UserProfile = () => {
                     <li>💰 Pengeluaran Bulanan: <span className="font-semibold text-slate-900 dark:text-white">Rp {(selectedCustomer.totalSpend || 0).toLocaleString('id-ID')}</span></li>
                     <li>💳 Top-up Frekuensi: <span className="font-semibold text-slate-900 dark:text-white">{selectedCustomer.topupFreq || 0}x</span></li>
                     <li>⚠️ Jumlah Keluhan: <span className="font-semibold text-slate-900 dark:text-white">{selectedCustomer.complaintCount || 0}</span></li>
-                    <li>🎯 Target Offer: <span className="font-semibold text-cyan-600 dark:text-cyan-400">{selectedCustomer.targetOffer || 'General Offer'}</span></li>
+                    <li>🎯 Target Offer: <span className="font-semibold text-cyan-600 dark:text-cyan-400">{userCategory || 'Loading...'}</span></li>
                   </ul>
                 </div>
               </div>
